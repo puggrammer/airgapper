@@ -1,0 +1,6 @@
+input/*.txt
+output/*.tar
+__pycache__
+.venv/
+.venvw/
+.vscode/settings.json

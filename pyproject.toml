@@ -1,0 +1,24 @@
+[project]
+name = "airgapper"
+dynamic = ["version"]
+authors = [
+    { name="Micythic"}
+]
+description = "Helper to download packages/images for airgapped applications."
+readme="README.md"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Developers",
+    "Development Status :: 4 - Beta"
+]
+keywords = ["offline","air gap"]
+
+requires-python = ">=3.7"
+
+[tool.setuptools.packages.find]
+include = ["airgapper"]
+
+[project.urls]
+Homepage = "https://github.com/pypa/sampleproject"
