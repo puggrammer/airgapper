@@ -1,8 +1,10 @@
 from argparse import Namespace
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
+from typing import Optional
 
-from airgapper.enum import Action, InputType, Module
+from airgapper.enum import Action, DockerRegistry, InputType, Module
 
 @dataclass
 class Args:
@@ -12,7 +14,8 @@ class Args:
     input_type: InputType
     output_dir: Path
     registry: str
-    repository: str
+    repository: Optional[str]
+    application: Optional[DockerRegistry]
     def __init__(self, args: Namespace):
         self.module = args.module
         self.action = args.action
@@ -21,6 +24,7 @@ class Args:
         self.output_dir = args.output_dir
         self.registry = args.registry
         self.repository = args.repository
+        self.application = self.determine_application(args.application)
 
     def determine_input_type(self, input):
         # Check if file exist
@@ -29,7 +33,6 @@ class Args:
             if input_fp.exists() and input_fp.is_file():
                 return InputType.TXT_FILE  
             return InputType.FILE
-        
         elif self.action == Action.UPLOAD:
             if not input_fp.exists():
                 raise Exception(f"Unable to locate file to upload: {input_fp}")
@@ -39,3 +42,10 @@ class Args:
         
         raise Exception(f"Unknown Action provided: {self.action}")
 
+    def determine_application(self, application):
+        if not application:
+            self.application = None
+        elif self.module == Module.DOCKER:
+            return DockerRegistry(application)
+        else:
+            raise NotImplementedError

@@ -14,3 +14,8 @@ class InputType(str, Enum):
     FILE = "file"
     TXT_FILE = "txt_file"
     FOLDER = "folder"
+
+class DockerRegistry(str, Enum):
+    DOCKER_REGISTRY = "docker_registry"
+    HARBOR = "harbor"
+    NEXUS = "nexus"

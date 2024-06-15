@@ -19,8 +19,9 @@ import sys
 from pathlib import Path
 
 from airgapper.modules import *
-from airgapper.enum import Module, Action, InputType
+from airgapper.enum import DockerRegistry, Module, Action, InputType
 from airgapper.modules.dataclasses import Args
+from airgapper.modules.docker import upload_docker_images_nexus
 
 # Configs
 
@@ -46,14 +47,14 @@ parser.add_argument(
     )
 )
 
-# Download
-# parser.add_argument(
-#     "-f",
-#     "--file",
-#     dest="input_filepath",
-#     required=Action.DOWNLOAD in sys.argv,
-#     help="[DOWNLOAD] txt file of list of repository/image:tag or package. E.g. tensorflow/tensorflow",
-# )
+parser.add_argument(
+    "-a",
+    "--app",
+    dest="application",
+    default=None,
+    help="[UPLOAD] Specific application name to upload to"
+)
+
 parser.add_argument(
     "-o",
     "--outputDir",
@@ -62,21 +63,14 @@ parser.add_argument(
     help="[DOWNLOAD] Output directory for downloaded packages/images",
 )
 
-
-# Upload
-# parser.add_argument(
-#     '-u',
-#     "--uploadDir",
-#     dest="upload_dir",
-#     required=Action.UPLOAD in sys.argv,
-#     help="[UPLOAD] Input directory of packages/images to be uploaded.",
-# )
 parser.add_argument(
+    "--repo",
     "--repository",
     dest="repository",
-    # required=Action.UPLOAD in sys.argv,
+    default=None,
     help="[UPLOAD] Project/Repository where packaged/images to be uploaded to.",
 )
+
 parser.add_argument(
     '-r',
     "--registry",
@@ -127,7 +121,12 @@ def main():
         if args.action == Action.DOWNLOAD:
             download_docker_images(args)
         elif args.action == Action.UPLOAD:
-            upload_docker_images(args)
+            if args.application == DockerRegistry.HARBOR:
+                upload_docker_images_harbor(args)
+            elif args.application == DockerRegistry.NEXUS:
+                upload_docker_images_nexus(args)
+            else:
+                raise NotImplementedError
     else:
         print("else")
         raise NotImplementedError("Not done yet!")
