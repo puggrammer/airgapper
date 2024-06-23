@@ -13,15 +13,13 @@ Supports:
 """
 
 import argparse
-from genericpath import isdir
-import logging
 import sys
-from pathlib import Path
 
 from airgapper.modules import *
 from airgapper.enum import DockerRegistry, Module, Action, InputType
 from airgapper.modules.dataclasses import Args
 from airgapper.modules.docker import upload_docker_images_nexus
+from airgapper.modules.pypi import PypiHelper
 
 # Configs
 
@@ -42,8 +40,8 @@ parser.add_argument(
 parser.add_argument(
     "input",
     help=(
-        "[DOWNLOAD] Either single package or a .txt file \n"
-        "[UPLOAD] folder directory containing packages. See examples in Repository"
+        "[DOWNLOAD] Either single package name or a .txt file \n"
+        "[UPLOAD] Either single file or folder directory containing packages. See examples in Repository"
     )
 )
 
@@ -90,26 +88,13 @@ def print_intro():
     print("\nTaking the shet pain out of air-gapped environments.")
     print("============================================================\n")
 
-    
-
-# def validate_upload_params(args):
-#     # if not args.project:
-#     #     raise Exception(f"Missing --project flag for {Action.UPLOAD}!")
-    
-#     # Check if upload directory exist
-#     upload_dir = Path(args.upload_dir)
-#     if not upload_dir.exists():
-#         raise Exception(f"Filepath {upload_dir} does not exist.")
-#     if not upload_dir.is_dir():
-#         raise Exception(f"Filepath {upload_dir} is not a directory.")
-
-
 
 def main():
     print_intro()
 
     args = Args(parser.parse_args())
-    logging.info(f"Initializing f{args.module}: f{args.action}.")
+    print(f"Initializing {args.module}: {args.action}.")
+    print(f"Args: {args}")
 
     # Route Request
     if args.module == Module.HELM:
@@ -117,6 +102,7 @@ def main():
             download_helm_chart(args)
         elif args.action == Action.UPLOAD:
             upload_helm_chart(args)
+
     elif args.module == Module.DOCKER:
         if args.action == Action.DOWNLOAD:
             download_docker_images(args)
@@ -127,6 +113,15 @@ def main():
                 upload_docker_images_nexus(args)
             else:
                 raise NotImplementedError
+            
+    elif args.module == Module.PYPI:
+        module = PypiHelper()
+        if args.action == Action.DOWNLOAD:
+            module.download_pypi_packages(args)
+        elif args.action == Action.UPLOAD:
+            if args.application == DockerRegistry.NEXUS:
+                module.upload_pypi_packages_nexus(args)
+
     else:
         print("else")
         raise NotImplementedError("Not done yet!")
