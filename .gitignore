@@ -4,3 +4,6 @@ __pycache__
 .venv/
 .venvw/
 .vscode/settings.json
+.pytest_cache/
+dist/
+*.egg-info/
