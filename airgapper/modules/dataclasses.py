@@ -1,10 +1,9 @@
 from argparse import Namespace
 from dataclasses import dataclass
-from enum import Enum
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
-from airgapper.enum import Action, DockerRegistry, InputType, Module
+from airgapper.enum import Action, DockerRegistry, InputType, Module, PypiRegistry
 
 @dataclass
 class Args:
@@ -15,7 +14,7 @@ class Args:
     output_dir: Path
     registry: str
     repository: Optional[str]
-    application: Optional[DockerRegistry]
+    application: Union[DockerRegistry, PypiRegistry, None]
     def __init__(self, args: Namespace):
         self.module = args.module
         self.action = args.action
@@ -35,7 +34,7 @@ class Args:
             return InputType.FILE
         elif self.action == Action.UPLOAD:
             if not input_fp.exists():
-                raise Exception(f"Unable to locate file to upload: {input_fp}")
+                raise Exception(f"Unable to locate file/folder to upload: {input_fp}")
             if input_fp.is_dir():
                 return InputType.FOLDER
             return InputType.FILE
@@ -47,5 +46,7 @@ class Args:
             self.application = None
         elif self.module == Module.DOCKER:
             return DockerRegistry(application)
+        elif self.module == Module.PYPI:
+            return PypiRegistry(application)
         else:
             raise NotImplementedError

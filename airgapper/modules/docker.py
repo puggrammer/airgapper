@@ -1,15 +1,15 @@
 from email.mime import image
 import json
+import os
 import re
 import subprocess
 from pathlib import Path
 
 from airgapper.enum import InputType
 from airgapper.modules.dataclasses import Args
+from airgapper.utils import check_docker
 
 def download_docker_images(args: Args):
-    print(f"Args: {args}")
-
     input_list = []
     if args.input_type == InputType.FILE:
         input_list.append(args.input)
@@ -22,7 +22,7 @@ def download_docker_images(args: Args):
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Download images
-    _check_docker()
+    check_docker()
     print(f"Downloading docker list {input_list}")
     for image_name in input_list:
         dl_image = subprocess.run(["docker", "pull", image_name],capture_output=True, text=True)
@@ -43,6 +43,10 @@ def upload_docker_images_harbor(args: Args):
     registry = args.registry
     repository = args.repository
     upload_dir = Path(args.input)
+
+    # Validate repository
+    if not repository:
+        raise Exception("Missing input repository. Harbor upload requires repository.")
 
     try:
         _login_docker_registry(registry)
@@ -69,14 +73,21 @@ def upload_docker_images_harbor(args: Args):
 
 def upload_docker_images_nexus(args: Args):
     registry = args.registry
-    upload_dir = Path(args.input)
+    input = Path(args.input)
+    upload_files = []
+
+    if input.exists():
+        if input.is_file():
+            upload_files.append(input)
+        elif input.is_dir():
+            # List tar files in directory
+            upload_files = list(input.glob("**/*.tar"))
+    print(f"Files detected for upload: {upload_files}")
 
     try:
         _login_docker_registry(registry)
 
-        # List tar files in directory
-        files = list(upload_dir.glob("**/*.tar"))
-        for file in files:
+        for file in upload_files:
             print(f"Uploading {file}..")
 
             load_cmd = _load_docker_tar(file)
@@ -101,13 +112,28 @@ def upload_docker_images_generic_registry():
 
 def _login_docker_registry(registry):
     print("Logging in docker..")
-    _check_docker()
-    login_cmd = subprocess.run(["docker", "login", registry], capture_output=True,
-        text=True)
+    check_docker()
+
+    user = os.getenv("AIRGAPPER_DOCKER_USER")
+    pwd = os.getenv("AIRGAPPER_DOCKER_PASS")
+    if user and pwd:
+        login_cmd = subprocess.run(
+            ["docker", "login", registry, "-u", user, "--password-stdin"],
+            capture_output=True,
+            text=True,
+            input=pwd+'\n'
+            )
+    else:
+        login_cmd = subprocess.run(
+            ["docker", "login", registry],
+            capture_output=True,
+            text=True
+            )
     if login_cmd.returncode:
         print("Exception occured during logging in.")
         print(f"{login_cmd=}")
         raise Exception("Exception occured during logging in.")
+    print("Successfully logged in to Docker registry.")
 
 def _load_docker_tar(file):
     load_cmd = subprocess.run(["docker", "load", "-i", file], capture_output=True, text=True)
@@ -136,10 +162,3 @@ def _get_sanitized_tar_filename(image_name):
     tar_name = re.sub(r'[^\w_.)( -]', '', tar_name)
     return f"{tar_name}.tar"
 
-def _check_docker():
-    resp = subprocess.run(["docker", "--version"], capture_output=True, text=True)
-    if resp.returncode:
-        print(resp.stdout)
-        print(resp.stderr)
-        raise Exception("✖ Need to install/start docker first and run this script again.")
-    
