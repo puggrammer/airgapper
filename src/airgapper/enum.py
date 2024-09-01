@@ -2,6 +2,7 @@ from enum import Enum
 
 
 class Module(str, Enum):
+    BITNAMI_HELM = "bitnami_helm"
     HELM = "helm"
     DOCKER = "docker"
     PYPI = "pypi"
@@ -12,14 +13,18 @@ class Action(str, Enum):
     UPLOAD = "upload"
 
 class InputType(str, Enum):
-    FILE = "file"
+    PACKAGE = "package"
     TXT_FILE = "txt_file"
     FOLDER = "folder"
 
-class DockerRegistry(str, Enum):
+class DockerRepository(str, Enum):
     DOCKER_REGISTRY = "docker_registry"
     HARBOR = "harbor"
     NEXUS = "nexus"
 
-class PypiRegistry(str, Enum):
+class PypiRepository(str, Enum):
     NEXUS = "nexus"
+
+class HelmRepository(str, Enum):
+    HARBOR = "harbor"
+    NEXUs = "nexus"

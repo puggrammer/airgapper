@@ -2,13 +2,12 @@
 import os
 from pathlib import Path
 import getpass
-import subprocess
-import getpass
 import requests
 
 from airgapper.enum import InputType
-from airgapper.modules.dataclasses import Args
-from airgapper.utils import pretty_print_completedprocess, pretty_print_response
+from airgapper.dataclasses import Args
+from airgapper.repositories import NexusHelper
+from airgapper.utils import pretty_print_completedprocess, pretty_print_response, run_command
 
 class PypiHelper:
 
@@ -20,49 +19,34 @@ class PypiHelper:
         output_dir.mkdir(parents=True, exist_ok=True)
         
         input_list = []
-        if args.input_type == InputType.FILE:
+        if args.input_type == InputType.PACKAGE:
             input_list.append(args.input)
 
             # Download pypi packages
-            proc = subprocess.run(["pip", "download", "--no-cache-dir","-d", output_dir, args.input], capture_output=True, text=True)
-            pretty_print_completedprocess(proc)
+            proc = run_command(["pip", "download", "--no-cache-dir","-d", output_dir, args.input], text=True)
+            # pretty_print_completedprocess(proc)
 
         elif args.input_type == InputType.TXT_FILE:
             # Download pypi packages
-            proc = subprocess.run(["pip", "download", "--no-cache-dir","-d", output_dir, "-r", args.input], capture_output=True, text=True)
-            pretty_print_completedprocess(proc)
+            proc = run_command(["pip", "download", "--no-cache-dir","-d", output_dir, "-r", args.input], text=True)
+            # pretty_print_completedprocess(proc)
 
 
     def upload_pypi_packages_nexus(self, args: Args):
-        user, pwd = self._get_login_details()
+        nexus = NexusHelper(url=args.registry, repository=args.repository)
 
-        input_files = []
-        if args.input_type == InputType.FILE:
-            input_files.append(Path(args.input))
+        upload_files = []
+        if args.input_type == InputType.PACKAGE:
+            upload_files.append(Path(args.input))
         elif args.input_type == InputType.FOLDER:
-            input_files = list(Path(args.input).iterdir())
-        print(f"Input files detected: {input_files}")
+            upload_files = list(Path(args.input).iterdir())
+        else:
+            raise Exception(f"Unknown InputType: {args.input_type}")
+        print(f"Files found for upload: {upload_files}")
 
-        
-        for file in input_files:
+        for file in upload_files:
             print(f"Uploading python package {file.name}..")
-            resp = requests.post(
-                f"http://{args.registry}/service/rest/v1/components",
-                params={"repository": args.repository},
-                headers={"accept": "application/json"}, # "Content-Type": "multipart/form-data"
-                files={"pypi.asset": (file.name, open(file, 'rb'))},
-                auth=(user, pwd)
-                )
+            resp = nexus.api_upload_pypi_component(file)
             pretty_print_response(resp)
         print("Uploading completed.")
         
-
-    def _get_login_details(self):
-        print("Logging in..")
-        user = os.getenv("AIRGAPPER_PYPI_USER")
-        if not user:
-            user = input("Username:")
-        pwd = os.getenv("AIRGAPPER_PYPI_PASS")
-        if not pwd:
-            pwd = getpass.getpass(f"Password for {user}:")
-        return (user,pwd)

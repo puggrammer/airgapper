@@ -5,145 +5,139 @@
 
 import os
 import subprocess
-import glob
+from glob import glob
 from pathlib import Path
 from time import sleep
 
 import pytest
-import requests
+from dotenv import load_dotenv
 
-from airgapper.enum import DockerRegistry
-from airgapper.utils import check_docker, pretty_print_completedprocess, pretty_print_response
+from airgapper.enum import DockerRepository
+from airgapper.utils import (
+    check_docker,
+    pretty_print_completedprocess,
+    pretty_print_response,
+)
+from airgapper.repositories import NexusHelper
 
-output_dir = "./output/test/pypi"
-download_txt_file = "input/test/dl_pypi_requirements.txt"
+load_dotenv()
+OUTPUT_DIR = "./output/test/pypi"
 
-single_package_name = "iniconfig==2.0.0"
-single_package_output_whl = Path(f"iniconfig-2.0.0-py3-none-any.whl")
+# Nexus Config
+NEXUS_URL = os.environ["AIRGAPPER_NEXUS_URL"]
+NEXUS_DOCKER_URL = os.environ["AIRGAPPER_NEXUS_DOCKER_URL"]
+NEXUS_USER = os.environ["AIRGAPPER_NEXUS_USER"]
+NEXUS_PASS = os.environ["AIRGAPPER_NEXUS_PASS"]
+NEXUS_REPOSITORY = "pypi-hosted"
 
-output_whl_fp = None
+def create_nexus_pypi_repository(nexus):
+    # Check if nexus have created helm repo
+    resp = nexus.api_get_pypi_repository(NEXUS_REPOSITORY)
+    pretty_print_response(resp)
+    if resp.status_code == 200:
+        print(f"{NEXUS_REPOSITORY} found.")
+    elif resp.status_code != 200:
+        print(f"{NEXUS_REPOSITORY} not found. Creating it in nexus..")
+        resp = nexus.api_create_pypi_repository(NEXUS_REPOSITORY)
+        pretty_print_response(resp)
+        assert resp.status_code == 201
+    else:
+        exit(1)
 
-nexus_url = "127.0.1.1:8091"
-nexus_user = "admin"
-nexus_pass = "nexus"
-nexus_repo = "pypi-hosted"
-
-os.environ["AIRGAPPER_PYPI_USER"] = nexus_user
-os.environ["AIRGAPPER_PYPI_PASS"] = nexus_pass
+@pytest.fixture(scope="session")
+def nexus():
+    nexus = NexusHelper(url=NEXUS_URL, repository=NEXUS_REPOSITORY)
+    create_nexus_pypi_repository(nexus)
+    return nexus
 
 @pytest.fixture(scope="module", autouse=True)
 def startup_containers():
     print("Starting up nexus..")
     check_docker()
     proc = subprocess.run(
-        ["docker", "compose", "-f","bin/nexus/docker-compose.yml","up","-d"],
+        ["docker", "compose", "-f", "bin/nexus/docker-compose.yml", "up", "-d"],
         capture_output=True,
-        text=True
+        text=True,
     )
     pretty_print_completedprocess(proc)
     sleep(5)
 
 
-def test_pypi_dl_package_pass():
-    try:
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","download",single_package_name,"-o",output_dir],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
-        assert proc.returncode == 0
-
-        output_whl_fp = Path(output_dir)/single_package_output_whl
-        print(f"Checking if {output_whl_fp} exists.")
-        assert output_whl_fp.exists()
-    finally:
-        cleanup_whl_directory()
-
-
-def test_pypi_dl_file_pass():
-    try:
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","download",download_txt_file,"-o",output_dir],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
-        assert proc.returncode == 0
-
-        output_files = set([x.name for x in list(Path(output_dir).iterdir())])
-        print(f"Files detected in output directory {output_dir}: {output_files}")
-
-        with open(download_txt_file, 'r') as f:
-            pkgs = [pkg.strip() for pkg in f.readlines()]
-        
-        output_pkgs = set([x.split('-')[0] for x in output_files])
-        for pkg in pkgs:
-            pkg_name = pkg.split("==")[0]
-            print(pkg_name)
-            assert pkg_name in output_pkgs
-
-    finally:
-        cleanup_whl_directory()
-
-
-def test_pypi_ul_package_nexus_pass():
+@pytest.mark.parametrize("package", ["colorama", "iniconfig==2.0.0"])
+def test_pypi_dl_package_pass(package):
     try:
         # Download
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","download",single_package_name,"-o",output_dir],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
+        proc = _pypi_download(package)
         assert proc.returncode == 0
 
-        output_whl_fp = Path(output_dir)/single_package_output_whl
-        print(f"Checking if {output_whl_fp} exists.")
-        assert output_whl_fp.exists()
+        # Check if file downloaded successfully
+        _check_if_download_success(package)
+
+    finally:
+        cleanup_whl_directory(OUTPUT_DIR)
+
+@pytest.mark.parametrize("input_txt_file", ["input/test/dl_pypi_requirements.txt"])
+def test_pypi_dl_file_pass(input_txt_file):
+    try:
+        # Download
+        proc = _pypi_download(input_txt_file)
+        assert proc.returncode == 0
+        
+        # Check if file downloaded successfully
+        with open(input_txt_file, "r") as f:
+            input_list = f.readlines()
+        print(input_list)
+        # Check output file count match
+        assert len(input_list) == len(os.listdir(OUTPUT_DIR))
+
+        # Check if file names match
+        for package in input_list:
+            _check_if_download_success(package)
+
+    finally:
+        cleanup_whl_directory(OUTPUT_DIR)
+
+@pytest.mark.parametrize("package", ["colorama", "iniconfig==2.0.0"])
+def test_pypi_ul_package_nexus_pass(package, nexus):
+    try:
+        # Download
+        proc = _pypi_download(package)
+        assert proc.returncode == 0
 
         # Upload
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","upload",output_whl_fp,"-a",DockerRegistry.NEXUS.value,"-r",nexus_url,"--repo",nexus_repo],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
-        assert proc.returncode == 0
+        # One package download can end up with multiple files
+        output_files = list(Path(OUTPUT_DIR).iterdir())
+        print(f"Files detected in output directory {OUTPUT_DIR}: {output_files}")
+        for file in output_files:
+            proc = _pypi_upload_nexus(file)
+            assert proc.returncode == 0
 
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
         print(f"Checking if file is uploaded.")
-        resp = nexus_get_file(single_package_name.split("==")[0])
+        package_name = package.split('-')[0]
+        params = {"pypi.description": package_name}
+        resp = nexus.api_search_file(**params)
         assert len(resp.json().get("items")) == 1
+        print(f"{package_name} detected in {NEXUS_REPOSITORY}")
 
     finally:
-        cleanup_whl_directory()
-        cleanup_nexus_delete_repo()
+        cleanup_whl_directory(OUTPUT_DIR)
+        nexus.api_delete_repo()
 
-
-def test_pypi_ul_directory_nexus_pass():
+@pytest.mark.parametrize("input_txt_file", ["input/test/dl_pypi_requirements.txt"])
+def test_pypi_ul_directory_nexus_pass(input_txt_file, nexus):
     try:
         # Download
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","download",download_txt_file,"-o",output_dir],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
+        proc = _pypi_download(input_txt_file)
         assert proc.returncode == 0
-        
-        # Upload
-        output_files = list(Path(output_dir).iterdir())
-        print(f"Files detected in output directory {output_dir}: {output_files}")
 
-        proc = subprocess.run(
-            ["python", "-m", "airgapper","pypi","upload",output_dir,"-a", DockerRegistry.NEXUS.value, "-r", nexus_url, "--repo", nexus_repo],
-            capture_output=True,
-            text=True
-        )
-        pretty_print_completedprocess(proc)
+        # Upload
+        # One package download can end up with multiple files
+        output_files = list(Path(OUTPUT_DIR).iterdir())
+        print(f"Files detected in output directory {OUTPUT_DIR}: {output_files}")
+        proc = _pypi_upload_nexus(OUTPUT_DIR)
         assert proc.returncode == 0
 
         # Check Upload
@@ -151,62 +145,72 @@ def test_pypi_ul_directory_nexus_pass():
         sleep(5)
         print(f"Checking if files are uploaded.")
         for file in output_files:
-            pkg_name = file.name.split('-')[0]
-            resp = nexus_get_file(pkg_name)
+            package_name = file.name.split("-")[0]
+            params = {"pypi.description": package_name}
+            resp = nexus.api_search_file(**params)
             assert len(resp.json().get("items")) == 1
-            print(f"{pkg_name} detected in {nexus_repo}")
+            print(f"{package_name} detected in {NEXUS_REPOSITORY}")
 
     finally:
-        cleanup_whl_directory()
-        cleanup_nexus_delete_repo()
+        cleanup_whl_directory(OUTPUT_DIR)
+        nexus.api_delete_repo()
 
 
 #############################################
 # Helper
 #############################################
 
-def nexus_get_file(pkg_name):
-    for _ in range(3):
-        resp = requests.get(
-            f"http://{nexus_url}/service/rest/v1/search",
-            params={
-                "repository": nexus_repo,
-                "pypi.description": pkg_name
-            },
-            auth=(nexus_user, nexus_pass)
-        )
-        if resp.status_code == 200:
-            break
-        print("Sleeping for 5s for nexus update..")
-        sleep(5)
-    pretty_print_response(resp)
-    assert resp.status_code == 200
-    return resp
+
+def _pypi_download(input):
+    proc = subprocess.run(
+        ["python", "-m", "airgapper", "pypi", "download", input, "-o", OUTPUT_DIR],
+        capture_output=True,
+        text=True,
+    )
+    pretty_print_completedprocess(proc)
+    return proc
+
+
+def _pypi_upload_nexus(input):
+    proc = subprocess.run(
+        [
+            "python",
+            "-m",
+            "airgapper",
+            "pypi",
+            "upload",
+            input,
+            "-a",
+            DockerRepository.NEXUS.value,
+            "-r",
+            NEXUS_URL,
+            "--repo",
+            NEXUS_REPOSITORY,
+        ],
+        capture_output=True,
+        text=True,
+    )
+    pretty_print_completedprocess(proc)
+    return proc
+
+
+def _check_if_download_success(package):
+    # single_package_output_whl = Path(f"iniconfig-2.0.0-py3-none-any.whl")
+    package_name = package.split('=')[0]
+    package_fp_prefix = f"{Path(OUTPUT_DIR).as_posix()}/{package_name}*.whl"
+    print(f"Checking if file with prefix {package_fp_prefix} exists.")
+    paths = list(glob(package_fp_prefix))
+    print(f"Paths detected with prefix: {paths}")
+    assert len(paths) > 0
 
 
 #############################################
 # Cleanup
 #############################################
 
-def cleanup_whl_directory():
+
+def cleanup_whl_directory(output_dir):
     print("Cleaning up downloaded whl files..")
     for file in list(Path(output_dir).iterdir()):
         file.unlink(missing_ok=True)
-
-
-def cleanup_nexus_delete_repo():
-    # Delete from registry
-    print(f"Listing all components in {nexus_repo} in nexus..")
-    items_resp = requests.get(
-        f"http://{nexus_url}/service/rest/v1/components",
-        params={"repository": nexus_repo},
-        auth=(nexus_user, nexus_pass)
-    )
-    print(f"Deleting all files in repository from nexus..")
-    for item in items_resp.json().get("items"):
-        print(f"Deleting {item.get('name')}:{item.get('version')} from {nexus_repo}..")
-        resp = requests.delete(
-            f"http://{nexus_url}/service/rest/v1/components/{item.get('id')}",
-            auth=(nexus_user, nexus_pass)
-        )
 

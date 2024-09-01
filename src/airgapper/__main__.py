@@ -16,10 +16,10 @@ import argparse
 import sys
 
 from airgapper.modules import *
-from airgapper.enum import DockerRegistry, Module, Action, InputType
-from airgapper.modules.dataclasses import Args
+from airgapper.enum import DockerRepository, Module, Action, InputType
+from airgapper.dataclasses import Args
 from airgapper.modules.docker import upload_docker_images_nexus
-from airgapper.modules.pypi import PypiHelper
+from airgapper.modules import PypiHelper, BitnamiHelmHelper
 
 # Configs
 
@@ -97,19 +97,25 @@ def main():
     print(f"Args: {args}")
 
     # Route Request
-    if args.module == Module.HELM:
+    if args.module == Module.BITNAMI_HELM:
+        module = BitnamiHelmHelper()
         if args.action == Action.DOWNLOAD:
-            download_helm_chart(args)
+            module.download_helm_charts(args)
         elif args.action == Action.UPLOAD:
-            upload_helm_chart(args)
+            if args.application == DockerRepository.HARBOR:
+                module.upload_helm_chart_harbor(args)
+            elif args.application == DockerRepository.NEXUS:
+                module.upload_helm_chart_nexus(args)
+            else:
+                raise NotImplementedError
 
     elif args.module == Module.DOCKER:
         if args.action == Action.DOWNLOAD:
             download_docker_images(args)
         elif args.action == Action.UPLOAD:
-            if args.application == DockerRegistry.HARBOR:
+            if args.application == DockerRepository.HARBOR:
                 upload_docker_images_harbor(args)
-            elif args.application == DockerRegistry.NEXUS:
+            elif args.application == DockerRepository.NEXUS:
                 upload_docker_images_nexus(args)
             else:
                 raise NotImplementedError
@@ -119,7 +125,7 @@ def main():
         if args.action == Action.DOWNLOAD:
             module.download_pypi_packages(args)
         elif args.action == Action.UPLOAD:
-            if args.application == DockerRegistry.NEXUS:
+            if args.application == DockerRepository.NEXUS:
                 module.upload_pypi_packages_nexus(args)
 
     else:
