@@ -70,83 +70,69 @@ There.
 
 ## Feature Matrix
 
-<style type="text/css">
-.tg  {color:#000000;background-color:#ffffff;border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-package{width:25%;text-align:center;vertical-align:top}
-.tg-normal{text-align:center;vertical-align:middle}
-.tg-NA{background-color:#656565;}
-.tg .tg-repo{width:25%;text-align:center;vertical-align:top}
-
-img.tick-icon {
-  height: 32px;
-  width: 32px;
-  content: url("https://cdn-icons-png.flaticon.com/512/12503/12503632.png")
-}
-img.wip-icon {
-  height: 32px;
-  width: 32px;
-  content: url("https://cdn-icons-png.flaticon.com/512/10295/10295925.png")
-}
-</style>
-
-<table class="tg"><thead>
+<table class="tg" align=center>
+  <thead>
   <tr>
     <th class="tg-repo">Packages<br>/<br>Hosted Repositories</th>
-    <th class="tg-repo">
+    <th class="tg-repo" align=center>
       <span>Nexus</span><br>
       <img height="48px" src="https://www.sonatype.com/hubfs/2019%20Product%20logo/Product%20Logo%20SVGs/NexusRepo_Vertical.svg">
     </th>
-    <th class="tg-repo">
+    <th class="tg-repo" align=center>
       <span>Harbor</span><br>
       <img height="48px" src="https://landscape.cncf.io/logos/de4f2dfd628db72e7d482ff0d9d22f0615f800a222ce7c8d6d2b5a147da77883.svg">
     </th>
   </tr></thead>
 <tbody>
   <tr>
-    <td class="tg-package">
+    <td class="tg-package" align=center>
       <span>Python Package (pip)</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/python.svg">
     </td>
-    <td class="tg-normal">
-      <img class="tick-icon">
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
     </td>
-    <td class="tg-NA"></td>
+    <td class="tg-NA" align=center>
+      <img class="cross-icon" src="https://cdn-icons-png.flaticon.com/512/3389/3389149.png" height=32px width=32px >
+    </td> 
     <!-- &#x274C;< -->
       <!-- <img height="64px" src="https://cdn3.iconfinder.com/data/icons/meteocons/512/n-a-512.png"> -->
   </tr>
   <tr>
-    <td class="tg-package">
+    <td class="tg-package" align=center>
       <span>Docker Image</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/docker-icon.svg">
     </td>
-    <td class="tg-normal">
-      <img class="tick-icon">
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
     </td>
-    <td class="tg-normal">
-      <img class="tick-icon">
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
     </td>
   </tr>
   <tr>
-    <td class="tg-package">
+    <td class="tg-package" align=center>
       <span>Helm Chart</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/helm.svg">
     </td>
-    <td class="tg-normal">
-      <img class="wip-icon">    
+    <td class="tg-normal" align=center>
+      <img class="wip-icon" src="https://cdn-icons-png.flaticon.com/512/10295/10295925.png" height=32px width=32px>    
     </td>
-    <td class="tg-normal"><img class="wip-icon"></td>
+    <td class="tg-normal" align=center>
+      <img class="wip-icon" src="https://cdn-icons-png.flaticon.com/512/10295/10295925.png" height=32px width=32px>    
+    </td>
   </tr>
   <tr>
-    <td class="tg-package">
+    <td class="tg-package" align=center>
       <span>Bitnami Helm Charts</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/bitnami.svg">
     </td>
-    <td class="tg-normal"><img class="wip-icon"></td>
-    <td class="tg-normal"><img class="tick-icon"></td>
+    <td class="tg-normal" align=center>
+      <img class="wip-icon" src="https://cdn-icons-png.flaticon.com/512/10295/10295925.png" height=32px width=32px>    
+    </td>
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
+    </td>
   </tr>
 </tbody>
 </table>
