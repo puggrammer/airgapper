@@ -1,7 +1,7 @@
 <a name="readme-top"></a>
 
-[![Contributors][contributors-shield]][contributors-url]
-[![Forks][forks-shield]][forks-url]
+<!-- [![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url] -->
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
@@ -14,10 +14,10 @@
     <img src="images/logo.png" alt="Logo" width="80" height="80">
   </a>
 
-  <h3 align="center">Best-README-Template</h3>
+  <h3 align="center">Airgapper</h3>
 
   <p align="center">
-    An awesome README template to jumpstart your projects!
+    Taking the shet pain out of air-gapped environments.
     <br />
     <a href="https://github.com/othneildrew/Best-README-Template"><strong>Explore the docs »</strong></a>
     <br />
@@ -59,36 +59,98 @@
 
 
 <!-- ABOUT THE PROJECT -->
-## About The Project
+## About Airgapper
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
+There.
 
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 ## Feature Matrix
 
-<table>
-  <tbody>
-    <tr valign="middle">
-    <tr valign="top">
-      <td width="25%" align="center">
-        <span>𝗛𝗧𝗠𝗟𝟱</span><br><br><br>
-        <img height="64px" src="https://cdn.svgporn.com/logos/html-5.svg">
-      </td>
-    </tr>
-  </tbody>
+<style type="text/css">
+.tg  {color:#000000;background-color:#ffffff;border-collapse:collapse;border-spacing:0;}
+.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
+  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
+.tg .tg-package{width:25%;text-align:center;vertical-align:top}
+.tg-normal{text-align:center;vertical-align:middle}
+.tg-NA{background-color:#656565;}
+.tg .tg-repo{width:25%;text-align:center;vertical-align:top}
+
+img.tick-icon {
+  height: 32px;
+  width: 32px;
+  content: url("https://cdn-icons-png.flaticon.com/512/12503/12503632.png")
+}
+img.wip-icon {
+  height: 32px;
+  width: 32px;
+  content: url("https://cdn-icons-png.flaticon.com/512/10295/10295925.png")
+}
+</style>
+
+<table class="tg"><thead>
+  <tr>
+    <th class="tg-repo">Packages<br>/<br>Hosted Repositories</th>
+    <th class="tg-repo">
+      <span>Nexus</span><br>
+      <img height="48px" src="https://www.sonatype.com/hubfs/2019%20Product%20logo/Product%20Logo%20SVGs/NexusRepo_Vertical.svg">
+    </th>
+    <th class="tg-repo">
+      <span>Harbor</span><br>
+      <img height="48px" src="https://landscape.cncf.io/logos/de4f2dfd628db72e7d482ff0d9d22f0615f800a222ce7c8d6d2b5a147da77883.svg">
+    </th>
+  </tr></thead>
+<tbody>
+  <tr>
+    <td class="tg-package">
+      <span>Python Package (pip)</span><br>
+      <img height="32px" src="https://cdn.svgporn.com/logos/python.svg">
+    </td>
+    <td class="tg-normal">
+      <img class="tick-icon">
+    </td>
+    <td class="tg-NA"></td>
+    <!-- &#x274C;< -->
+      <!-- <img height="64px" src="https://cdn3.iconfinder.com/data/icons/meteocons/512/n-a-512.png"> -->
+  </tr>
+  <tr>
+    <td class="tg-package">
+      <span>Docker Image</span><br>
+      <img height="32px" src="https://cdn.svgporn.com/logos/docker-icon.svg">
+    </td>
+    <td class="tg-normal">
+      <img class="tick-icon">
+    </td>
+    <td class="tg-normal">
+      <img class="tick-icon">
+    </td>
+  </tr>
+  <tr>
+    <td class="tg-package">
+      <span>Helm Chart</span><br>
+      <img height="32px" src="https://cdn.svgporn.com/logos/helm.svg">
+    </td>
+    <td class="tg-normal">
+      <img class="wip-icon">    
+    </td>
+    <td class="tg-normal"><img class="wip-icon"></td>
+  </tr>
+  <tr>
+    <td class="tg-package">
+      <span>Bitnami Helm Charts</span><br>
+      <img height="32px" src="https://cdn.svgporn.com/logos/bitnami.svg">
+    </td>
+    <td class="tg-normal"><img class="wip-icon"></td>
+    <td class="tg-normal"><img class="tick-icon"></td>
+  </tr>
+</tbody>
 </table>
+
 
 
 <!-- GETTING STARTED -->
@@ -100,10 +162,15 @@ To get a local copy up and running follow these simple example steps.
 ### Prerequisites
 
 This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+#### Python
+- Python 3.7+
+
+#### Docker
+- Docker Engine
+
+#### Bitnami Helm
+- Docker Engine
+- Bitnami Helm Distribution Tool 
 
 ### Installation
 

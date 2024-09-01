@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional, Union
 
-from airgapper.enum import Action, DockerRegistry, InputType, Module, PypiRegistry
+from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository
 
 @dataclass
 class Args:
@@ -14,7 +14,7 @@ class Args:
     output_dir: Path
     registry: str
     repository: Optional[str]
-    application: Union[DockerRegistry, PypiRegistry, None]
+    application: Union[DockerRepository, PypiRepository, None]
     def __init__(self, args: Namespace):
         self.module = args.module
         self.action = args.action
@@ -31,22 +31,24 @@ class Args:
         if self.action == Action.DOWNLOAD:
             if input_fp.exists() and input_fp.is_file():
                 return InputType.TXT_FILE  
-            return InputType.FILE
+            return InputType.PACKAGE
         elif self.action == Action.UPLOAD:
             if not input_fp.exists():
                 raise Exception(f"Unable to locate file/folder to upload: {input_fp}")
             if input_fp.is_dir():
                 return InputType.FOLDER
-            return InputType.FILE
+            return InputType.PACKAGE
         
         raise Exception(f"Unknown Action provided: {self.action}")
 
     def determine_application(self, application):
         if not application:
-            self.application = None
+            return None
         elif self.module == Module.DOCKER:
-            return DockerRegistry(application)
+            return DockerRepository(application)
         elif self.module == Module.PYPI:
-            return PypiRegistry(application)
+            return PypiRepository(application)
+        elif self.module == Module.BITNAMI_HELM:
+            return HelmRepository(application)
         else:
             raise NotImplementedError

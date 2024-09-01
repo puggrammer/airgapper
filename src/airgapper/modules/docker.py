@@ -2,16 +2,16 @@ from email.mime import image
 import json
 import os
 import re
-import subprocess
 from pathlib import Path
 
 from airgapper.enum import InputType
-from airgapper.modules.dataclasses import Args
-from airgapper.utils import check_docker
+from airgapper.dataclasses import Args
+from airgapper.utils import check_docker, run_command, run_command_with_stdout
+from airgapper.repositories import HarborHelper, NexusHelper
 
 def download_docker_images(args: Args):
     input_list = []
-    if args.input_type == InputType.FILE:
+    if args.input_type == InputType.PACKAGE:
         input_list.append(args.input)
     elif args.input_type == InputType.TXT_FILE:
         with open(Path(args.input), "r") as f:
@@ -25,7 +25,7 @@ def download_docker_images(args: Args):
     check_docker()
     print(f"Downloading docker list {input_list}")
     for image_name in input_list:
-        dl_image = subprocess.run(["docker", "pull", image_name],capture_output=True, text=True)
+        dl_image = run_command(["docker", "pull", image_name], text=True)
         if dl_image.returncode:
             print(dl_image.stderr)
             raise Exception("Exception occured during downloading images.")
@@ -34,7 +34,7 @@ def download_docker_images(args: Args):
     for image_name in input_list:
         tar_fp = output_dir / _get_sanitized_tar_filename(image_name)
         print(f"saving to {tar_fp}")
-        tar_image = subprocess.run(["docker","save","--output", tar_fp, image_name])
+        tar_image = run_command(["docker","save","--output", tar_fp, image_name])
         if tar_image.returncode:
             print("Exception occured during saving images to tar.")
 
@@ -42,106 +42,90 @@ def download_docker_images(args: Args):
 def upload_docker_images_harbor(args: Args):
     registry = args.registry
     repository = args.repository
-    upload_dir = Path(args.input)
-
     # Validate repository
     if not repository:
         raise Exception("Missing input repository. Harbor upload requires repository.")
-
+    
     try:
-        _login_docker_registry(registry)
-
+        harbor = HarborHelper(url=args.registry, project=args.repository)
+        harbor.login()
+        
         # List tar files in directory
-        files = list(upload_dir.glob("**/*.tar"))
-        for file in files:
+        upload_list = []
+        if args.input_type == InputType.PACKAGE:
+            upload_list.append(args.input)
+        elif args.input_type == InputType.FOLDER:
+            upload_list = list(Path(args.input).glob("**/*.tar"))
+        else:
+            raise Exception(f"Unrecognized input_type: {args.input_type.value}")
+        if not upload_list:
+            raise Exception(f"No files found at {Path(args.input)}")
+        
+        for file in upload_list:
             print(f"Uploading {file}..")
-
-            load_cmd = _load_docker_tar(file)
-
-            loaded_image_name = _get_loaded_image_name_from_text(load_cmd.stdout)
+            load_cmd_stdout = _load_docker_tar(file)
+            loaded_image_name = _get_loaded_image_name_from_text(load_cmd_stdout)
 
             # Retag image
             image_new_name = f"{registry}/{repository}/{loaded_image_name}"
             print(f"Retagging image {loaded_image_name} to {image_new_name}.")
-            subprocess.run(["docker", "tag", f"{loaded_image_name}", image_new_name])
+            run_command(["docker", "tag", f"{loaded_image_name}", image_new_name])
 
             _push_docker_registry(image_new_name)
 
     finally:
         print("Logging out docker..")
-        subprocess.run(["docker", "logout", registry])   
+        harbor.logout()
 
 def upload_docker_images_nexus(args: Args):
     registry = args.registry
-    input = Path(args.input)
-    upload_files = []
-
-    if input.exists():
-        if input.is_file():
-            upload_files.append(input)
-        elif input.is_dir():
-            # List tar files in directory
-            upload_files = list(input.glob("**/*.tar"))
-    print(f"Files detected for upload: {upload_files}")
 
     try:
-        _login_docker_registry(registry)
+        nexus = NexusHelper(url=args.registry, repository=args.repository)
+        nexus.login_docker()
 
-        for file in upload_files:
+        # List tar files in directory
+        upload_list = []
+        if args.input_type == InputType.PACKAGE:
+            upload_list.append(args.input)
+        elif args.input_type == InputType.FOLDER:
+            upload_list = list(Path(args.input).glob("**/*.tar"))
+        else:
+            raise Exception(f"Unrecognized input_type: {args.input_type.value}")
+        if not upload_list:
+            raise Exception(f"No files found at {Path(args.input)}")
+                    
+        for file in upload_list:
             print(f"Uploading {file}..")
 
-            load_cmd = _load_docker_tar(file)
+            load_cmd_stdout = _load_docker_tar(file)
 
-            loaded_image_name = _get_loaded_image_name_from_text(load_cmd.stdout)
+            loaded_image_name = _get_loaded_image_name_from_text(load_cmd_stdout)
 
             # Retag image
             image_new_name = f"{registry}/{loaded_image_name}"
             print(f"Retagging image {loaded_image_name} to {image_new_name}.")
-            subprocess.run(["docker", "tag", f"{loaded_image_name}", image_new_name])
+            run_command(["docker", "tag", f"{loaded_image_name}", image_new_name])
 
             _push_docker_registry(image_new_name)
 
     finally:
         print("Logging out docker..")
-        subprocess.run(["docker", "logout", registry])   
+        nexus.logout_docker()
 
 
 def upload_docker_images_generic_registry():
     pass
 
 
-def _login_docker_registry(registry):
-    print("Logging in docker..")
-    check_docker()
-
-    user = os.getenv("AIRGAPPER_DOCKER_USER")
-    pwd = os.getenv("AIRGAPPER_DOCKER_PASS")
-    if user and pwd:
-        login_cmd = subprocess.run(
-            ["docker", "login", registry, "-u", user, "--password-stdin"],
-            capture_output=True,
-            text=True,
-            input=pwd+'\n'
-            )
-    else:
-        login_cmd = subprocess.run(
-            ["docker", "login", registry],
-            capture_output=True,
-            text=True
-            )
-    if login_cmd.returncode:
-        print("Exception occured during logging in.")
-        print(f"{login_cmd=}")
-        raise Exception("Exception occured during logging in.")
-    print("Successfully logged in to Docker registry.")
-
 def _load_docker_tar(file):
-    load_cmd = subprocess.run(["docker", "load", "-i", file], capture_output=True, text=True)
+    load_cmd, load_cmd_stdout = run_command_with_stdout(["docker", "load", "-i", file], text=True)
     if load_cmd.returncode:
         print("Exception occured during loading image.")
-        print(json.dumps(load_cmd, indent=2))
+        print(json.dumps(load_cmd_stdout, indent=2))
         raise Exception("Exception occured during loading image.")
-    return load_cmd
+    print(f"load_cmd: {load_cmd_stdout}")
+    return load_cmd_stdout
 
 def _get_loaded_image_name_from_text(text):
     image_name_rgx = re.search(r"Loaded image: ([\w\d:.\-/]+)\n", text)
@@ -155,7 +139,7 @@ def _get_loaded_image_name_from_text(text):
 def _push_docker_registry(image_new_name):
     # Push image to registry
     print(f"Pushing repository {image_new_name} to registry.")
-    subprocess.run(["docker", "push", image_new_name])
+    run_command(["docker", "push", image_new_name])
 
 def _get_sanitized_tar_filename(image_name):
     tar_name = image_name.split('/')[-1]
