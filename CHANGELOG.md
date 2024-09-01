@@ -1,6 +1,10 @@
 # CHANGELOG
 
-## v0.0.0 (2024-09-01)
+## v0.1.0 (2024-09-01)
+
+### Feature
+
+* feat: Update README.md ([`fada592`](https://github.com/puggrammer/airgapper/commit/fada59257bc7b7b2e1285e454eeaedb900c63de2))
 
 ### Unknown
 
