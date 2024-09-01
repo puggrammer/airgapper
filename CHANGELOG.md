@@ -1,8 +1,16 @@
 # CHANGELOG
 
-## v0.0.0 (2024-06-23)
+## v0.0.0 (2024-09-01)
 
 ### Unknown
+
+* Merge pull request #2 from puggrammer/add-helm
+
+Add helm ([`af9fafd`](https://github.com/puggrammer/airgapper/commit/af9fafdfd45e29e4b5d0fb7c7ee4957d725b6b75))
+
+* completed biitnami_helm module ([`49bae47`](https://github.com/puggrammer/airgapper/commit/49bae47e04878d1670ec0fb94ac3c3deeeb06475))
+
+* Update README.md ([`09cf294`](https://github.com/puggrammer/airgapper/commit/09cf294bfefed4b7bec68764736fe8f774573c13))
 
 * Add packaging (#1)
 
