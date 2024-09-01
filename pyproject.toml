@@ -1,8 +1,7 @@
 [project]
 name = "airgapper"
-version = "0.1.0"
-# dynamic = ["version"]
-authors = [{ name = "Micythic" }]
+dynamic = ["version"]
+authors = [{ name = "Puggrammer" }]
 description = "Helper to download packages/images for airgapped applications."
 readme = "README.md"
 classifiers = [
@@ -12,6 +11,7 @@ classifiers = [
     "Intended Audience :: Developers",
     "Development Status :: 4 - Beta",
 ]
+dependencies = ["requests"]
 keywords = ["offline", "air gap", "airgap", "airgapped"]
 
 requires-python = ">=3.7"
@@ -30,3 +30,6 @@ Homepage = "https://github.com/puggrammer/airgapper"
 
 [tool.pytest.ini_options]
 pythonpath = ["tests"]
+
+[tool.semantic_release]
+version_variables = ["src/airgapper/version.py:__version__"]
