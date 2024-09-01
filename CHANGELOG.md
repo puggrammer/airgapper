@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## v0.1.1 (2024-09-01)
+
+### Fix
+
+* fix: Update semantic-release.yml ([`015f1ef`](https://github.com/puggrammer/airgapper/commit/015f1ef991a80234a6f325972fa9df8fb4bcc208))
+
+### Unknown
+
+* Update semantic-release.yml ([`18b2ec6`](https://github.com/puggrammer/airgapper/commit/18b2ec61244398cbe3fb73dfc4c7427e377208f9))
+
 ## v0.1.0 (2024-09-01)
 
 ### Feature
@@ -15,6 +25,10 @@ Add helm ([`af9fafd`](https://github.com/puggrammer/airgapper/commit/af9fafdfd45
 * completed biitnami_helm module ([`49bae47`](https://github.com/puggrammer/airgapper/commit/49bae47e04878d1670ec0fb94ac3c3deeeb06475))
 
 * Update README.md ([`09cf294`](https://github.com/puggrammer/airgapper/commit/09cf294bfefed4b7bec68764736fe8f774573c13))
+
+## v0.0.0 (2024-06-23)
+
+### Unknown
 
 * Add packaging (#1)
 
