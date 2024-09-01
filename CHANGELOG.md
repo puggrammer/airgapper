@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.1.3 (2024-09-01)
+
+### Fix
+
+* fix: Added python versions ([`b5c5cb6`](https://github.com/puggrammer/airgapper/commit/b5c5cb6a31c4a57f58a1c952882ca490eb6fe040))
+
 ## v0.1.2 (2024-09-01)
 
 ### Fix
