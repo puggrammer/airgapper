@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.1.2 (2024-09-01)
+
+### Fix
+
+* fix: Update semantic-release.yml ([`3611ac3`](https://github.com/puggrammer/airgapper/commit/3611ac31984ae34950d1bbe9c1b64484441b53fb))
+
 ## v0.1.1 (2024-09-01)
 
 ### Fix
