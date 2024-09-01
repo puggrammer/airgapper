@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v0.1.5 (2024-09-01)
+
+### Fix
+
+* fix: pyproject.toml ([`c26cd62`](https://github.com/puggrammer/airgapper/commit/c26cd627bbc592674969baa208d530ebe57b0bfe))
+
 ## v0.1.4 (2024-09-01)
 
 ### Fix
