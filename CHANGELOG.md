@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## v0.1.6 (2024-10-11)
+
+### Fix
+
+* fix: versioning ([`e2ef23e`](https://github.com/puggrammer/airgapper/commit/e2ef23ece111c29aa2320da150db6b7b9a2d74a5))
+
+### Unknown
+
+* Merge pull request #3 from puggrammer/cleanup
+
+Cleanup ([`01a379f`](https://github.com/puggrammer/airgapper/commit/01a379f5e18fe92725f1e3c238814a827d663fa4))
+
+* formatting ([`fa42e4c`](https://github.com/puggrammer/airgapper/commit/fa42e4c58df3ec92f35a4767201e5235a229a32f))
+
+* Delete bin/distribution-tooling-for-helm directory ([`f51547d`](https://github.com/puggrammer/airgapper/commit/f51547d9d642ab2dee4b2082fe570620d673f5a0))
+
+* Delete bin/harbor/common/config directory ([`8e2be1c`](https://github.com/puggrammer/airgapper/commit/8e2be1c10f337d796aa47529961d7a1de115ae02))
+
 ## v0.1.5 (2024-09-01)
 
 ### Fix
