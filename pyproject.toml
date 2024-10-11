@@ -13,8 +13,13 @@ classifiers = [
 ]
 dependencies = ["requests"]
 keywords = ["offline", "air gap", "airgap", "airgapped"]
-
 requires-python = ">=3.7"
+
+[project.scripts]
+airgapper = "airgapper.__main__:main"
+[project.urls]
+Homepage = "https://github.com/puggrammer/airgapper"
+
 
 [build-system]
 requires = ["setuptools>=61.0"]
@@ -23,13 +28,22 @@ build-backend = "setuptools.build_meta"
 # [tool.setuptools.packages.find]
 # include = ["airgapper"]
 
-[project.scripts]
-airgapper = "airgapper.__main__:main"
-[project.urls]
-Homepage = "https://github.com/puggrammer/airgapper"
 
 [tool.pytest.ini_options]
 pythonpath = ["tests"]
+
+[tool.black]
+line-length = 120
+skip-string-normalization = true
+
+[tool.pylint."MESSAGES CONTROL"]
+max-line-length = 120
+disable = [
+    "missing-function-docstring",
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "broad-exception-raised"
+]
 
 [tool.semantic_release]
 version_variables = ["src/airgapper/version.py:__version__"]

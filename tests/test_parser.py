@@ -1,7 +1,4 @@
 import subprocess
-import glob
-from pathlib import Path
-
 
 
 def test_parser_missing_module_fail():
@@ -43,4 +40,4 @@ def _run_airgapper(extra_args: list):
     args = ['python','-m','airgapper']
     args.extend(extra_args)
     print(args)
-    return subprocess.run(args, capture_output=True, text=True) 
+    return subprocess.run(args, capture_output=True, text=True, check=False) 

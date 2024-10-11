@@ -15,8 +15,8 @@ Supports:
 import argparse
 import sys
 
-from airgapper.modules import *
-from airgapper.enum import DockerRepository, Module, Action, InputType
+from airgapper.modules import download_docker_images, upload_docker_images_harbor
+from airgapper.enum import DockerRepository, Module, Action
 from airgapper.dataclasses import Args
 from airgapper.modules.docker import upload_docker_images_nexus
 from airgapper.modules import PypiHelper, BitnamiHelmHelper
@@ -119,7 +119,7 @@ def main():
                 upload_docker_images_nexus(args)
             else:
                 raise NotImplementedError
-            
+
     elif args.module == Module.PYPI:
         module = PypiHelper()
         if args.action == Action.DOWNLOAD:

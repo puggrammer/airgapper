@@ -5,13 +5,13 @@
 
 import re
 import os
+import sys
 import subprocess
-import requests
-import pytest
 from pathlib import Path
 from glob import glob
 from time import sleep
 
+import pytest
 from dotenv import load_dotenv
 
 from airgapper.enum import DockerRepository
@@ -41,6 +41,7 @@ NEXUS_REPOSITORY = "helm-hosted"
 RGX_PACKAGE_NAME = ".+/(?P<chart_name>[a-z]+),?(?P<chart_version>[.1-9]+)?"
 RGX_WRAP_FILE = "(?P<chart_name>[a-z]+)-?(?P<chart_version>[.1-9]+)?.wrap.tgz"
 
+
 # @pytest.fixture(scope="session")
 def create_nexus_helm_repository(nexus):
     # Check if nexus have created helm repo
@@ -54,18 +55,20 @@ def create_nexus_helm_repository(nexus):
         pretty_print_response(resp)
         assert resp.status_code == 201
     else:
-        exit(1)
+        sys.exit(1)
 
 
-@pytest.fixture(scope="session")
-def nexus():
+@pytest.fixture(scope="session", name="nexus")
+def nexus_fixture():
     nexus = NexusHelper(url=NEXUS_URL, repository=NEXUS_REPOSITORY)
     create_nexus_helm_repository(nexus)
     return nexus
 
-@pytest.fixture(scope="session")
-def harbor():
+
+@pytest.fixture(scope="session", name="harbor")
+def harbor_fixture():
     return HarborHelper(url=HARBOR_URL, project=HARBOR_PROJECT)
+
 
 #############################################
 # Download
@@ -100,7 +103,7 @@ def test_helm_dl_txt_file_pass(input_txt_file):
         assert proc.returncode == 0
 
         # Check if file downloaded successfully
-        with open(input_txt_file, "r") as f:
+        with open(input_txt_file, "r", encoding='utf8') as f:
             input_list = f.readlines()
         print(input_list)
         # Check output file count match
@@ -113,22 +116,19 @@ def test_helm_dl_txt_file_pass(input_txt_file):
     finally:
         cleanup_output_directory(OUTPUT_DIR)
 
-@pytest.mark.parametrize(
-    "helm_chart_package",
-    ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"]
-)
+
+@pytest.mark.parametrize("helm_chart_package", ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"])
 def test_helm_dl_package_change_dt_dir_pass(helm_chart_package):
     os.environ["AIRGAPPER_DT_DIRECTORY"] = "/home/lchengju/Documents/airgapper/bin/distribution-tooling-for-helm"
     test_helm_dl_package_pass(helm_chart_package)
+
 
 #############################################
 # Upload
 #############################################
 
 
-@pytest.mark.parametrize(
-    "helm_chart_package", ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"]
-)
+@pytest.mark.parametrize("helm_chart_package", ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"])
 def test_helm_ul_package_nexus_pass(helm_chart_package, nexus):
     try:
         # Download
@@ -146,7 +146,7 @@ def test_helm_ul_package_nexus_pass(helm_chart_package, nexus):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if files are uploaded.")
+        print("Checking if files are uploaded.")
         for file in output_files:
             print(file.name)
             rgx_groups = re.search(RGX_WRAP_FILE, file.name)
@@ -186,7 +186,7 @@ def test_helm_ul_directory_nexus_pass(input_txt_file, nexus):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if files are uploaded.")
+        print("Checking if files are uploaded.")
         for file in output_files:
             rgx_groups = re.search(RGX_WRAP_FILE, file.name)
             if not rgx_groups:
@@ -204,11 +204,9 @@ def test_helm_ul_directory_nexus_pass(input_txt_file, nexus):
     finally:
         cleanup_output_directory(OUTPUT_DIR)
         nexus.api_delete_repo()
-    pass
 
-@pytest.mark.parametrize(
-    "helm_chart_package", ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"]
-)
+
+@pytest.mark.parametrize("helm_chart_package", ["oci://registry-1.docker.io/bitnamicharts/kibana,11.2.17"])
 def test_helm_ul_package_harbor_pass(helm_chart_package, harbor):
     try:
         # Download
@@ -224,7 +222,7 @@ def test_helm_ul_package_harbor_pass(helm_chart_package, harbor):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if files are uploaded.")
+        print("Checking if files are uploaded.")
         for file in output_files:
             rgx_groups = re.search(RGX_WRAP_FILE, file.name)
             if not rgx_groups:
@@ -261,7 +259,7 @@ def test_helm_ul_directory_harbor_pass(input_txt_file, harbor):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if files are uploaded.")
+        print("Checking if files are uploaded.")
         for file in output_files:
             rgx_groups = re.search(RGX_WRAP_FILE, file.name)
             if not rgx_groups:
@@ -281,8 +279,7 @@ def test_helm_ul_directory_harbor_pass(input_txt_file, harbor):
         harbor.api_delete_project()
 
 
-
-def _bitnami_helm_download(input):
+def _bitnami_helm_download(input_str):
     # Download
     proc = subprocess.run(
         [
@@ -291,17 +288,19 @@ def _bitnami_helm_download(input):
             "airgapper",
             "bitnami_helm",
             "download",
-            input,
+            input_str,
             "-o",
             OUTPUT_DIR,
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     pretty_print_completedprocess(proc)
     return proc
 
-def _bitnami_helm_upload_nexus(input):
+
+def _bitnami_helm_upload_nexus(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -309,7 +308,7 @@ def _bitnami_helm_upload_nexus(input):
             "airgapper",
             "bitnami_helm",
             "upload",
-            input,
+            input_str,
             "-a",
             DockerRepository.NEXUS.value,
             "-r",
@@ -319,11 +318,13 @@ def _bitnami_helm_upload_nexus(input):
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     pretty_print_completedprocess(proc)
     return proc
 
-def _bitnami_helm_upload_harbor(input):
+
+def _bitnami_helm_upload_harbor(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -331,7 +332,7 @@ def _bitnami_helm_upload_harbor(input):
             "airgapper",
             "bitnami_helm",
             "upload",
-            input,
+            input_str,
             "-a",
             DockerRepository.HARBOR.value,
             "-r",
@@ -341,23 +342,25 @@ def _bitnami_helm_upload_harbor(input):
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     pretty_print_completedprocess(proc)
     return proc
 
 
 def _check_if_download_success(helm_chart_package):
-        # Check if file downloaded successfully
-        rgx_groups = re.search(RGX_PACKAGE_NAME, helm_chart_package)
-        if not rgx_groups:
-            raise Exception("Unable to extract helm chart name")
-        rgx_groups = rgx_groups.groupdict()
-        if not rgx_groups["chart_version"]:
-            rgx_groups["chart_version"] = ""  # Set empty string as default value
-        # print(rgx_groups)
-        helm_chart_file_prefix = f"{Path(OUTPUT_DIR).as_posix()}/{rgx_groups['chart_name']}*{rgx_groups['chart_version']}*.wrap.tgz"
-        print(f"Checking if file with prefix {helm_chart_file_prefix} exists.")
-        paths = list(glob(helm_chart_file_prefix))
-        print(f"Paths detected with prefix: {paths}")
-        assert len(paths) > 0
-        
+    # Check if file downloaded successfully
+    rgx_groups = re.search(RGX_PACKAGE_NAME, helm_chart_package)
+    if not rgx_groups:
+        raise Exception("Unable to extract helm chart name")
+    rgx_groups = rgx_groups.groupdict()
+    if not rgx_groups["chart_version"]:
+        rgx_groups["chart_version"] = ""  # Set empty string as default value
+    # print(rgx_groups)
+    helm_chart_file_prefix = (
+        f"{Path(OUTPUT_DIR).as_posix()}/{rgx_groups['chart_name']}*{rgx_groups['chart_version']}*.wrap.tgz"
+    )
+    print(f"Checking if file with prefix {helm_chart_file_prefix} exists.")
+    paths = list(glob(helm_chart_file_prefix))
+    print(f"Paths detected with prefix: {paths}")
+    assert len(paths) > 0

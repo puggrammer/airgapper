@@ -1,13 +1,10 @@
-
-import os
 from pathlib import Path
-import getpass
-import requests
 
 from airgapper.enum import InputType
 from airgapper.dataclasses import Args
 from airgapper.repositories import NexusHelper
-from airgapper.utils import pretty_print_completedprocess, pretty_print_response, run_command
+from airgapper.utils import pretty_print_response, run_command
+
 
 class PypiHelper:
 
@@ -17,20 +14,19 @@ class PypiHelper:
         # Check if output dir exist
         output_dir = Path(args.output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         input_list = []
         if args.input_type == InputType.PACKAGE:
             input_list.append(args.input)
 
             # Download pypi packages
-            proc = run_command(["pip", "download", "--no-cache-dir","-d", output_dir, args.input], text=True)
+            proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, args.input], text=True)
             # pretty_print_completedprocess(proc)
 
         elif args.input_type == InputType.TXT_FILE:
             # Download pypi packages
-            proc = run_command(["pip", "download", "--no-cache-dir","-d", output_dir, "-r", args.input], text=True)
+            proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, "-r", args.input], text=True)
             # pretty_print_completedprocess(proc)
-
 
     def upload_pypi_packages_nexus(self, args: Args):
         nexus = NexusHelper(url=args.registry, repository=args.repository)
@@ -41,7 +37,7 @@ class PypiHelper:
         elif args.input_type == InputType.FOLDER:
             upload_files = list(Path(args.input).iterdir())
         else:
-            raise Exception(f"Unknown InputType: {args.input_type}")
+            raise ValueError(f"Unknown InputType: {args.input_type}")
         print(f"Files found for upload: {upload_files}")
 
         for file in upload_files:
@@ -49,4 +45,3 @@ class PypiHelper:
             resp = nexus.api_upload_pypi_component(file)
             pretty_print_response(resp)
         print("Uploading completed.")
-        

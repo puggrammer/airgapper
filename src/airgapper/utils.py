@@ -9,11 +9,11 @@ import requests
 
 
 def check_docker():
-    resp = subprocess.run(["docker", "--version"], capture_output=True, text=True)
+    resp = subprocess.run(["docker", "--version"], capture_output=True, text=True, check=False)
     if resp.returncode:
         print(resp.stdout)
         print(resp.stderr)
-        raise Exception("✖ Need to install/start docker first and run this script again.")
+        raise AssertionError("✖ Need to install/start docker first and run this script again.")
 
 def pretty_print_completedprocess(resp: subprocess.CompletedProcess):
     if resp.returncode == 0:
@@ -26,7 +26,7 @@ def pretty_print_response(resp: requests.Response):
     print(f"{resp.status_code}: {resp.reason}")
     try:
         print(json.dumps(resp.json(), indent=2))
-    except:
+    except Exception:
         print(resp.text)
 
 def run_command(command, **kwargs):
