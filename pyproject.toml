@@ -28,6 +28,8 @@ build-backend = "setuptools.build_meta"
 # [tool.setuptools.packages.find]
 # include = ["airgapper"]
 
+[tool.setuptools.dynamic]
+version = {attr = "airgapper.version.__version__"}
 
 [tool.pytest.ini_options]
 pythonpath = ["tests"]
