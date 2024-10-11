@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import subprocess
 from glob import glob
 from pathlib import Path
@@ -30,6 +31,7 @@ NEXUS_USER = os.environ["AIRGAPPER_NEXUS_USER"]
 NEXUS_PASS = os.environ["AIRGAPPER_NEXUS_PASS"]
 NEXUS_REPOSITORY = "pypi-hosted"
 
+
 def create_nexus_pypi_repository(nexus):
     # Check if nexus have created helm repo
     resp = nexus.api_get_pypi_repository(NEXUS_REPOSITORY)
@@ -42,13 +44,15 @@ def create_nexus_pypi_repository(nexus):
         pretty_print_response(resp)
         assert resp.status_code == 201
     else:
-        exit(1)
+        sys.exit(1)
 
-@pytest.fixture(scope="session")
-def nexus():
+
+@pytest.fixture(scope="session", name="nexus")
+def nexus_fixture():
     nexus = NexusHelper(url=NEXUS_URL, repository=NEXUS_REPOSITORY)
     create_nexus_pypi_repository(nexus)
     return nexus
+
 
 @pytest.fixture(scope="module", autouse=True)
 def startup_containers():
@@ -58,6 +62,7 @@ def startup_containers():
         ["docker", "compose", "-f", "bin/nexus/docker-compose.yml", "up", "-d"],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     sleep(5)
@@ -76,15 +81,16 @@ def test_pypi_dl_package_pass(package):
     finally:
         cleanup_whl_directory(OUTPUT_DIR)
 
+
 @pytest.mark.parametrize("input_txt_file", ["input/test/dl_pypi_requirements.txt"])
 def test_pypi_dl_file_pass(input_txt_file):
     try:
         # Download
         proc = _pypi_download(input_txt_file)
         assert proc.returncode == 0
-        
+
         # Check if file downloaded successfully
-        with open(input_txt_file, "r") as f:
+        with open(input_txt_file, "r", encoding='utf8') as f:
             input_list = f.readlines()
         print(input_list)
         # Check output file count match
@@ -96,6 +102,7 @@ def test_pypi_dl_file_pass(input_txt_file):
 
     finally:
         cleanup_whl_directory(OUTPUT_DIR)
+
 
 @pytest.mark.parametrize("package", ["colorama", "iniconfig==2.0.0"])
 def test_pypi_ul_package_nexus_pass(package, nexus):
@@ -115,7 +122,7 @@ def test_pypi_ul_package_nexus_pass(package, nexus):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if file is uploaded.")
+        print("Checking if file is uploaded.")
         package_name = package.split('-')[0]
         params = {"pypi.description": package_name}
         resp = nexus.api_search_file(**params)
@@ -125,6 +132,7 @@ def test_pypi_ul_package_nexus_pass(package, nexus):
     finally:
         cleanup_whl_directory(OUTPUT_DIR)
         nexus.api_delete_repo()
+
 
 @pytest.mark.parametrize("input_txt_file", ["input/test/dl_pypi_requirements.txt"])
 def test_pypi_ul_directory_nexus_pass(input_txt_file, nexus):
@@ -143,7 +151,7 @@ def test_pypi_ul_directory_nexus_pass(input_txt_file, nexus):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if files are uploaded.")
+        print("Checking if files are uploaded.")
         for file in output_files:
             package_name = file.name.split("-")[0]
             params = {"pypi.description": package_name}
@@ -161,17 +169,18 @@ def test_pypi_ul_directory_nexus_pass(input_txt_file, nexus):
 #############################################
 
 
-def _pypi_download(input):
+def _pypi_download(input_str):
     proc = subprocess.run(
-        ["python", "-m", "airgapper", "pypi", "download", input, "-o", OUTPUT_DIR],
+        ["python", "-m", "airgapper", "pypi", "download", input_str, "-o", OUTPUT_DIR],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     return proc
 
 
-def _pypi_upload_nexus(input):
+def _pypi_upload_nexus(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -179,7 +188,7 @@ def _pypi_upload_nexus(input):
             "airgapper",
             "pypi",
             "upload",
-            input,
+            input_str,
             "-a",
             DockerRepository.NEXUS.value,
             "-r",
@@ -189,6 +198,7 @@ def _pypi_upload_nexus(input):
         ],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     return proc
@@ -213,4 +223,3 @@ def cleanup_whl_directory(output_dir):
     print("Cleaning up downloaded whl files..")
     for file in list(Path(output_dir).iterdir()):
         file.unlink(missing_ok=True)
-

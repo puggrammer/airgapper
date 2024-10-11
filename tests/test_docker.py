@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 import subprocess
 from time import sleep
 from pathlib import Path
@@ -14,7 +15,6 @@ from dotenv import load_dotenv
 from airgapper.enum import DockerRepository
 from airgapper.modules.docker import _get_sanitized_tar_filename
 from airgapper.utils import (
-    check_docker,
     pretty_print_completedprocess,
     pretty_print_response,
 )
@@ -73,14 +73,15 @@ def create_nexus_docker_repository(nexus):
         pretty_print_response(resp)
         assert resp.status_code == 201
     else:
-        exit(1)
+        sys.exit(1)
 
 
-@pytest.fixture(scope="session")
-def nexus():
-    nexus = NexusHelper(url=NEXUS_URL, repository=NEXUS_REPOSITORY)
-    create_nexus_docker_repository(nexus)
-    return nexus
+@pytest.fixture(scope="session", name="nexus")
+def nexus_fixture():
+    nexus_helper = NexusHelper(url=NEXUS_URL, repository=NEXUS_REPOSITORY)
+    create_nexus_docker_repository(nexus_helper)
+    return nexus_helper
+
 
 # @pytest.fixture(scope="session")
 # def nexus_api():
@@ -88,8 +89,9 @@ def nexus():
 #     create_nexus_docker_repository(nexus)
 #     return nexus
 
-@pytest.fixture(scope="session")
-def harbor():
+
+@pytest.fixture(scope="session", name="harbor")
+def harbor_fixture():
     return HarborHelper(url=HARBOR_URL, project=HARBOR_PROJECT)
 
 
@@ -116,9 +118,9 @@ def test_docker_dl_txt_file_pass(input_txt_file):
         proc = _docker_download(input_txt_file)
         assert proc.returncode == 0
 
-        with open(input_txt_file, "r") as f:
+        with open(input_txt_file, "r", encoding='utf8') as f:
             images = [img.strip() for img in f.readlines()]
-        
+
         # Check if files downloaded successfully
         for docker_image in images:
             _check_if_download_success(docker_image)
@@ -149,9 +151,9 @@ def test_docker_ul_package_nexus_pass(docker_image, nexus):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if file is uploaded.")
+        print("Checking if file is uploaded.")
         image_name, image_tag = docker_image.split(":")
-        params = {"docker.imageName": image_name,"docker.imageTag": image_tag}
+        params = {"docker.imageName": image_name, "docker.imageTag": image_tag}
         resp = nexus.api_search_file(**params)
         assert len(resp.json().get("items")) == 1
 
@@ -174,7 +176,7 @@ def test_docker_ul_directory_nexus_pass(input_txt_file, nexus):
         proc = _docker_upload_nexus(OUTPUT_DIR)
         assert proc.returncode == 0
 
-        with open(input_txt_file, "r") as f:
+        with open(input_txt_file, "r", encoding='utf8') as f:
             images = [img.strip() for img in f.readlines()]
 
         # Check Upload
@@ -183,7 +185,7 @@ def test_docker_ul_directory_nexus_pass(input_txt_file, nexus):
         print("Checking if files are uploaded.")
         for image in images:
             image_name, image_tag = image.split(":")
-            params = {"docker.imageName": image_name,"docker.imageTag": image_tag}
+            params = {"docker.imageName": image_name, "docker.imageTag": image_tag}
             resp = nexus.api_search_file(**params)
             assert len(resp.json().get("items")) == 1
 
@@ -210,9 +212,11 @@ def test_docker_ul_harbor_missing_repo_fail():
         ],
         capture_output=True,
         text=True,
+        check=False,
     )
     pretty_print_completedprocess(proc)
     assert proc.returncode > 0
+
 
 @pytest.mark.parametrize("docker_image", ["alpinelinux/unbound:latest-x86_64"])
 def test_docker_ul_package_harbor_pass(docker_image, harbor):
@@ -230,7 +234,7 @@ def test_docker_ul_package_harbor_pass(docker_image, harbor):
         # Check Upload
         print("Sleeping for 5s for nexus update..")
         sleep(5)
-        print(f"Checking if file is uploaded.")
+        print("Checking if file is uploaded.")
         image_name, image_tag = docker_image.split(":")
         resp = harbor.api_search_file(image_name)
         assert len(resp.json()) >= 1
@@ -241,6 +245,7 @@ def test_docker_ul_package_harbor_pass(docker_image, harbor):
         cleanup_output_directory(OUTPUT_DIR)
         harbor.api_delete_project()
 
+
 @pytest.mark.parametrize("input_txt_file", ["./input/test/dl_docker.txt"])
 def test_docker_ul_directory_harbor_pass(input_txt_file, harbor):
     try:
@@ -248,14 +253,13 @@ def test_docker_ul_directory_harbor_pass(input_txt_file, harbor):
         proc = _docker_download(input_txt_file)
         assert proc.returncode == 0
 
-
         # Upload
         output_tars = list(Path(OUTPUT_DIR).iterdir())
         print(f"Files detected in output directory {OUTPUT_DIR}: {output_tars}")
         proc = _docker_upload_harbor(OUTPUT_DIR)
         assert proc.returncode == 0
 
-        with open(input_txt_file, "r") as f:
+        with open(input_txt_file, "r", encoding="utf8") as f:
             images = [img.strip() for img in f.readlines()]
 
         # Check Upload
@@ -287,7 +291,8 @@ def test_docker_ul_directory_docker_registry_pass():
 # Helper
 #############################################
 
-def _docker_download(input):
+
+def _docker_download(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -295,17 +300,19 @@ def _docker_download(input):
             "airgapper",
             "docker",
             "download",
-            input,
+            input_str,
             "-o",
             OUTPUT_DIR,
         ],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     return proc
 
-def _docker_upload_nexus(input):
+
+def _docker_upload_nexus(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -313,7 +320,7 @@ def _docker_upload_nexus(input):
             "airgapper",
             "docker",
             "upload",
-            input,
+            input_str,
             "-a",
             DockerRepository.NEXUS.value,
             "-r",
@@ -321,12 +328,13 @@ def _docker_upload_nexus(input):
         ],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     return proc
 
 
-def _docker_upload_harbor(input):
+def _docker_upload_harbor(input_str):
     proc = subprocess.run(
         [
             "python",
@@ -334,7 +342,7 @@ def _docker_upload_harbor(input):
             "airgapper",
             "docker",
             "upload",
-            input,
+            input_str,
             "-a",
             DockerRepository.HARBOR.value,
             "-r",
@@ -344,21 +352,24 @@ def _docker_upload_harbor(input):
         ],
         capture_output=True,
         text=True,
+        check=True,
     )
     pretty_print_completedprocess(proc)
     return proc
+
 
 def _check_if_download_success(docker_image):
     output_tar_fp = Path(OUTPUT_DIR) / _get_sanitized_tar_filename(docker_image)
     print(f"Checking if {output_tar_fp} exists.")
     assert output_tar_fp.exists()
 
+
 #############################################
 # Cleanup
 #############################################
 def cleanup_docker_download(image_name):
     print(f"Cleaning up downloaded image {image_name}..")
-    subprocess.run(["docker", "rmi", image_name])
+    subprocess.run(["docker", "rmi", image_name], check=True)
 
 
 # def cleanup_output_directory():
