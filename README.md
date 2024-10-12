@@ -86,7 +86,7 @@ There.
 <tbody>
   <tr>
     <td class="tg-package" align=center>
-      <span>Python Package (pip)</span><br>
+      <span>Python Package (pypi)</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/python.svg">
     </td>
     <td class="tg-normal" align=center>
@@ -97,6 +97,18 @@ There.
     </td> 
     <!-- &#x274C;< -->
       <!-- <img height="64px" src="https://cdn3.iconfinder.com/data/icons/meteocons/512/n-a-512.png"> -->
+  </tr>
+  <tr>
+    <td class="tg-package" align=center>
+      <span>Maven Java Packages</span><br> 
+      <img height="32px" src="https://cdn.svgporn.com/logos/maven.svg">
+    </td>
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
+    </td>
+    <td class="tg-NA" align=center>
+      <img class="cross-icon" src="https://cdn-icons-png.flaticon.com/512/3389/3389149.png" height=32px width=32px >
+    </td> 
   </tr>
   <tr>
     <td class="tg-package" align=center>
