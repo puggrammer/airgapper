@@ -32,7 +32,7 @@ class Args:
         input_fp = Path(input_type)
         if self.action == Action.DOWNLOAD:
             if input_fp.exists() and input_fp.is_file():
-                return InputType.TXT_FILE
+                return InputType.FILE
             return InputType.PACKAGE
         elif self.action == Action.UPLOAD:
             if not input_fp.exists():

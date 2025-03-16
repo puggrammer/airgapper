@@ -23,10 +23,12 @@ class PypiHelper:
             proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, args.input], text=True)
             # pretty_print_completedprocess(proc)
 
-        elif args.input_type == InputType.TXT_FILE:
+        elif args.input_type == InputType.FILE:
             # Download pypi packages
             proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, "-r", args.input], text=True)
             # pretty_print_completedprocess(proc)
+        else:
+            raise Exception("No implmentation for provided InputType.")
 
     def upload_pypi_packages_nexus(self, args: Args):
         nexus = NexusHelper(url=args.registry, repository=args.repository)

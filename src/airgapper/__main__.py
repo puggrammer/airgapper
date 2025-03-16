@@ -13,6 +13,7 @@ Supports:
 """
 
 import argparse
+from ast import arg
 import sys
 
 from airgapper.modules import download_docker_images, upload_docker_images_harbor
@@ -20,6 +21,7 @@ from airgapper.enum import DockerRepository, Module, Action
 from airgapper.dataclasses import Args
 from airgapper.modules.docker import upload_docker_images_nexus
 from airgapper.modules import PypiHelper, BitnamiHelmHelper
+from airgapper.modules.maven_helper import MavenHelper
 
 # Configs
 
@@ -127,6 +129,13 @@ def main():
         elif args.action == Action.UPLOAD:
             if args.application == DockerRepository.NEXUS:
                 module.upload_pypi_packages_nexus(args)
+
+    elif args.module == Module.MAVEN:
+        module = MavenHelper()
+        if args.action == Action.DOWNLOAD:
+            module.download_maven_packages(args)
+        # elif args.action == Action.UPLOAD:
+            
 
     else:
         print("else")

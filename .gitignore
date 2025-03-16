@@ -1,7 +1,7 @@
 input/*.txt
 output/*.tar
 __pycache__
-.venv/
+.venv*/
 .venvw/
 .vscode/settings.json
 .pytest_cache/

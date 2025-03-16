@@ -13,7 +13,7 @@ def download_docker_images(args: Args):
     input_list = []
     if args.input_type == InputType.PACKAGE:
         input_list.append(args.input)
-    elif args.input_type == InputType.TXT_FILE:
+    elif args.input_type == InputType.FILE:
         with open(Path(args.input), "r") as f:
             input_list = [line.strip() for line in f.readlines()]
 

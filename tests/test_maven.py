@@ -17,15 +17,14 @@ from airgapper.utils import (
 from airgapper.repositories import NexusHelper
 
 load_dotenv()
-OUTPUT_DIR = "./output/test/pypi"
+OUTPUT_DIR = "./output/test/maven"
 
 
 # Nexus Config
 NEXUS_URL = os.environ["AIRGAPPER_NEXUS_URL"]
-NEXUS_DOCKER_URL = os.environ["AIRGAPPER_NEXUS_DOCKER_URL"]
 NEXUS_USER = os.environ["AIRGAPPER_NEXUS_USER"]
 NEXUS_PASS = os.environ["AIRGAPPER_NEXUS_PASS"]
-NEXUS_REPOSITORY = "pypi-hosted"
+NEXUS_REPOSITORY = "maven-hosted"
 
 
 def create_nexus_pypi_repository(nexus):
@@ -67,4 +66,8 @@ def test_pypi_ul_package_nexus_pass(package, nexus):
 
 @pytest.mark.parametrize("input_xml", ["input/test/dl_pom.xml"])
 def test_mvn_ul_pom_pass(input_xml, nexus):
+    pass
+
+def test_mvn_tool_missing_exception_pass():
+    """ Test exception thrown when mvn tool not installed """
     pass

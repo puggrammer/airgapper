@@ -71,7 +71,7 @@ class BitnamiHelmHelper:
         if args.input_type == InputType.PACKAGE:
             input_list.append(self.extract_chart_and_version(args.input))
 
-        elif args.input_type == InputType.TXT_FILE:
+        elif args.input_type == InputType.FILE:
             input_fp = Path(args.input)
             with open(input_fp, "r", encoding='utf8') as f:
                 for line in f.readlines():
