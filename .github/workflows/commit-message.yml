@@ -1,0 +1,19 @@
+name: Commit Message Check
+
+on: push
+
+jobs:
+  check-commit-message:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Validate commit messages
+        run: |
+          git log --format=%s ${{ github.event.before }}..${{ github.sha }} | while read line; do
+            if ! echo "$line" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|build|ci|revert|BREAKING CHANGE): .+"; then
+              echo "Invalid commit message: $line"
+              exit 1
+            fi
+          done
