@@ -63,7 +63,7 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-There.
+Taking the shet pain out of airgapped environment.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -202,6 +202,51 @@ _Below is an example of how you can instruct your audience on installing and set
 ## Usage
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+
+### Maven
+
+#### Download
+1. Search for maven/gradle plugin package at [Maven Repository](https://mvnrepository.com)
+2. Select version and copy xml snippet into pom.xml
+    <details><summary>pom.xml example</summary>
+        ```xml
+        pom.xml
+
+        <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>com.example</groupId>
+            <artifactId>sample-project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <name>Sample Project</name>
+
+            <dependencies>
+                <!-- Gson Library for JSON processing -->
+                <dependency>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                    <version>2.8.9</version>
+                </dependency>
+            </dependencies>
+        </project>
+        ```
+    </details>
+
+3. Download
+    ```sh
+    airgapper maven download pom.xml -o ./output-directory
+    ```
+#### Upload
+1. Inject required environment variables.
+2. Upload
+    ```sh
+    airgapper maven upload ./output-directory \
+        "-a",
+        "nexus", # Application
+        "-r",
+        "http://nexus.local.arpa:8080", # Application URL 
+        "--repo",
+        "maven-hosted", # Repository Name
+    ```
 
 _For more examples, please refer to the [Documentation](https://example.com)_
 
