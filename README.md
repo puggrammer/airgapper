@@ -154,21 +154,27 @@ There.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+Just download package from pypi repository. Its that easy!
+  ```sh
+  pip install airgapper
+  ```
+
+The package will use existing tools (docker, mvn etc.) to automate the downloading and uploading of library packages.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
+The following are the prerequisites when working with different libraries
+
 #### Python
 - Python 3.7+
+- [Requests Library](https://pypi.org/project/requests/)
 
 #### Docker
-- Docker Engine
+- [Docker Engine](https://docs.docker.com/engine/)
 
 #### Bitnami Helm
-- Docker Engine
-- Bitnami Helm Distribution Tool 
+- [Docker Engine](https://docs.docker.com/engine/)
+- [Bitnami Helm Distribution Tool](https://github.com/vmware-labs/distribution-tooling-for-helm) 
 
 ### Installation
 
@@ -206,13 +212,10 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+- [ ] Add Maven support
+  - [ ] Add gradle plugins support
+- [ ] Add generic Helm chart support
+  - [ ] Handle recursive subdependencies
 
 See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
 

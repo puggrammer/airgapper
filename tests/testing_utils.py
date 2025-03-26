@@ -1,5 +1,7 @@
+import shutil
 from time import sleep
 from pathlib import Path
+
 import requests
 
 from airgapper.utils import pretty_print_response
@@ -10,9 +12,10 @@ from airgapper.utils import pretty_print_response
 
 
 def cleanup_output_directory(output_dir):
-    print("Cleaning up downloaded whl files..")
-    for file in list(Path(output_dir).iterdir()):
-        file.unlink(missing_ok=True)
+    print(f"Cleaning up downloaded files in {output_dir}..")
+    fp = Path(output_dir)
+    if fp.exists() and fp.is_dir():
+        shutil.rmtree(output_dir)
 
 #############################################
 # Harbor Helpers

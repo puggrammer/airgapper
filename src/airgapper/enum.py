@@ -28,4 +28,7 @@ class PypiRepository(str, Enum):
 
 class HelmRepository(str, Enum):
     HARBOR = "harbor"
-    NEXUs = "nexus"
+    NEXUS = "nexus"
+
+class MavenRepository(str, Enum):
+    NEXUS = "nexus"

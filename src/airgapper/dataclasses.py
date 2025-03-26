@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Union
 from enum import Enum
 
-from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository
+from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository, MavenRepository
 
 @dataclass
 class Args:
@@ -49,7 +49,9 @@ class Args:
         module_map = {
             Module.DOCKER: DockerRepository,
             Module.PYPI: PypiRepository,
-            Module.BITNAMI_HELM: HelmRepository}
+            Module.BITNAMI_HELM: HelmRepository,
+            Module.MAVEN: MavenRepository
+        }
         for module, cls in module_map.items():
             if self.module == module:
                 return cls(application)

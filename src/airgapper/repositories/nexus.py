@@ -4,6 +4,7 @@ import getpass
 import subprocess
 from time import sleep
 from pathlib import Path
+from typing import Optional
 
 from airgapper.utils import pretty_print_response, check_docker
 
@@ -95,6 +96,9 @@ class NexusHelper:
 
     def api_get_docker_repository(self, repository):
         return self.api_get_repository("docker", repository)
+
+    def api_get_maven_repository(self, repository):
+        return self.api_get_repository("maven", repository)
         
     def api_create_helm_repository(self, repository):
         resp = requests.post(
@@ -155,6 +159,38 @@ class NexusHelper:
         print(f"Repo {repository} created in Nexus!")
         self.repository = repository
         return resp
+
+    def api_create_maven_repository(self, repository):
+        resp = requests.post(
+            f"{self.api_url}/v1/repositories/maven/hosted",
+            auth=(self.user, self.password),
+            json={
+                "name": repository,
+                "online": True,
+                "storage": {
+                    "blobStoreName": "default",
+                    "writePolicy": "allow",
+                    "strictContentTypeValidation": True
+                },
+                # "cleanup": {
+                #     "policyNames": [
+                #     "string"
+                #     ]
+                # },
+                "component": {
+                    "proprietaryComponents": False
+                },
+                "maven": {
+                    "versionPolicy": "MIXED",
+                    "layoutPolicy": "STRICT",
+                    "contentDisposition": "INLINE"
+                }
+            }
+        )
+        assert resp.status_code == 201
+        print(f"Repo {repository} created in Nexus!")
+        self.repository = repository
+        return resp
     
     def api_upload_helm_component(self, file:Path):
         resp = requests.post(
@@ -174,4 +210,27 @@ class NexusHelper:
             files={"pypi.asset": (file.name, open(file, 'rb'))},
             auth=(self.user, self.password)
             )
+        return resp
+
+    def api_upload_maven_component(self, pom_fp:Path, jar_fp:Optional[Path]=None):
+        with open(pom_fp, "rb") as pom_file:
+            pom_content = pom_file.read()
+        files = {
+            "maven2.generate-pom": (None, "false"),
+            "maven2.asset1.extension": (None, "pom"),
+            "maven2.asset1": (pom_fp.name, pom_content)
+        }
+        if jar_fp:
+            with open(jar_fp, "rb") as jar_file:
+                jar_content = jar_file.read()
+            files["maven2.asset2"] = (jar_fp.name, jar_content, "application/java-archive")
+            files["maven2.asset2.extension"] = (None, "jar")
+
+        resp = requests.post(
+            f"{self.api_url}/v1/components",
+            params={"repository": self.repository},
+            headers={"accept": "application/json"},
+            files=files,
+            auth=(self.user, self.password)
+        )
         return resp

@@ -1,6 +1,7 @@
 
 import os
 import json
+import sys
 import subprocess
 import getpass
 from time import sleep
@@ -37,14 +38,18 @@ def run_command(command, **kwargs):
         stderr=subprocess.STDOUT,
         **kwargs
     )
-    stdout = []
-    while process.stdout:
-        line = process.stdout.readline()
-        stdout.append(str(line))
-        if not line and process.poll() is not None:
-            break
-        print(line, end='')
-    stdout = ''.join(stdout)
+
+    for c in iter(lambda: process.stdout.read(1), b""):
+        sys.stdout.buffer.write(c)
+
+    # stdout = []
+    # while process.stdout:
+    #     line = process.stdout.readline()
+    #     stdout.append(str(line))
+    #     if not line and process.poll() is not None:
+    #         break
+    #     print(line, end='')
+    # stdout = ''.join(stdout)
     return process
 
 def run_command_with_stdout(command, **kwargs):

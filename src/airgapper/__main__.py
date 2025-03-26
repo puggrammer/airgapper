@@ -134,7 +134,8 @@ def main():
         module = MavenHelper()
         if args.action == Action.DOWNLOAD:
             module.download_maven_packages(args)
-        # elif args.action == Action.UPLOAD:
+        elif args.action == Action.UPLOAD:
+            module.upload_maven_packages(args)
             
 
     else:

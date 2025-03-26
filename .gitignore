@@ -9,3 +9,7 @@ dist/
 *.egg-info/
 bin/harbor/common/
 bin/distribution-tooling-for-helm/
+.DS_Store
+bin/apache-maven*
+bin/nexus/nexus-data
+input/test/output/test
