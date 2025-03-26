@@ -1,7 +1,7 @@
 input/*.txt
 output/*.tar
 __pycache__
-.venv/
+.venv*/
 .venvw/
 .vscode/settings.json
 .pytest_cache/
@@ -9,3 +9,7 @@ dist/
 *.egg-info/
 bin/harbor/common/
 bin/distribution-tooling-for-helm/
+.DS_Store
+bin/apache-maven*
+bin/nexus/nexus-data
+input/test/output/test

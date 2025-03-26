@@ -63,7 +63,7 @@
 
 [![Product Name Screen Shot][product-screenshot]](https://example.com)
 
-There.
+Taking the shet pain out of airgapped environment.
 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -86,7 +86,7 @@ There.
 <tbody>
   <tr>
     <td class="tg-package" align=center>
-      <span>Python Package (pip)</span><br>
+      <span>Python Package (pypi)</span><br>
       <img height="32px" src="https://cdn.svgporn.com/logos/python.svg">
     </td>
     <td class="tg-normal" align=center>
@@ -97,6 +97,18 @@ There.
     </td> 
     <!-- &#x274C;< -->
       <!-- <img height="64px" src="https://cdn3.iconfinder.com/data/icons/meteocons/512/n-a-512.png"> -->
+  </tr>
+  <tr>
+    <td class="tg-package" align=center>
+      <span>Maven Java Packages</span><br> 
+      <img height="32px" src="https://cdn.svgporn.com/logos/maven.svg">
+    </td>
+    <td class="tg-normal" align=center>
+      <img class="tick-icon" src="https://cdn-icons-png.flaticon.com/512/2550/2550322.png" height=32px width=32px >
+    </td>
+    <td class="tg-NA" align=center>
+      <img class="cross-icon" src="https://cdn-icons-png.flaticon.com/512/3389/3389149.png" height=32px width=32px >
+    </td> 
   </tr>
   <tr>
     <td class="tg-package" align=center>
@@ -142,21 +154,27 @@ There.
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
+Just download package from pypi repository. Its that easy!
+  ```sh
+  pip install airgapper
+  ```
+
+The package will use existing tools (docker, mvn etc.) to automate the downloading and uploading of library packages.
 
 ### Prerequisites
 
-This is an example of how to list things you need to use the software and how to install them.
+The following are the prerequisites when working with different libraries
+
 #### Python
 - Python 3.7+
+- [Requests Library](https://pypi.org/project/requests/)
 
 #### Docker
-- Docker Engine
+- [Docker Engine](https://docs.docker.com/engine/)
 
 #### Bitnami Helm
-- Docker Engine
-- Bitnami Helm Distribution Tool 
+- [Docker Engine](https://docs.docker.com/engine/)
+- [Bitnami Helm Distribution Tool](https://github.com/vmware-labs/distribution-tooling-for-helm) 
 
 ### Installation
 
@@ -185,6 +203,51 @@ _Below is an example of how you can instruct your audience on installing and set
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
+### Maven
+
+#### Download
+1. Search for maven/gradle plugin package at [Maven Repository](https://mvnrepository.com)
+2. Select version and copy xml snippet into pom.xml
+    <details><summary>pom.xml example</summary>
+        ```xml
+        pom.xml
+
+        <project>
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>com.example</groupId>
+            <artifactId>sample-project</artifactId>
+            <version>1.0-SNAPSHOT</version>
+            <name>Sample Project</name>
+
+            <dependencies>
+                <!-- Gson Library for JSON processing -->
+                <dependency>
+                    <groupId>com.google.code.gson</groupId>
+                    <artifactId>gson</artifactId>
+                    <version>2.8.9</version>
+                </dependency>
+            </dependencies>
+        </project>
+        ```
+    </details>
+
+3. Download
+    ```sh
+    airgapper maven download pom.xml -o ./output-directory
+    ```
+#### Upload
+1. Inject required environment variables.
+2. Upload
+    ```sh
+    airgapper maven upload ./output-directory \
+        "-a",
+        "nexus", # Application
+        "-r",
+        "http://nexus.local.arpa:8080", # Application URL 
+        "--repo",
+        "maven-hosted", # Repository Name
+    ```
+
 _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -194,13 +257,10 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-- [x] Add Changelog
-- [x] Add back to top links
-- [ ] Add Additional Templates w/ Examples
-- [ ] Add "components" document to easily copy & paste sections of the readme
-- [ ] Multi-language Support
-    - [ ] Chinese
-    - [ ] Spanish
+- [ ] Add Maven support
+  - [ ] Add gradle plugins support
+- [ ] Add generic Helm chart support
+  - [ ] Handle recursive subdependencies
 
 See the [open issues](https://github.com/othneildrew/Best-README-Template/issues) for a full list of proposed features (and known issues).
 

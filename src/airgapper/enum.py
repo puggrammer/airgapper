@@ -6,6 +6,7 @@ class Module(str, Enum):
     HELM = "helm"
     DOCKER = "docker"
     PYPI = "pypi"
+    MAVEN = 'maven'
 
 
 class Action(str, Enum):
@@ -14,7 +15,7 @@ class Action(str, Enum):
 
 class InputType(str, Enum):
     PACKAGE = "package"
-    TXT_FILE = "txt_file"
+    FILE = "file"
     FOLDER = "folder"
 
 class DockerRepository(str, Enum):
@@ -27,4 +28,7 @@ class PypiRepository(str, Enum):
 
 class HelmRepository(str, Enum):
     HARBOR = "harbor"
-    NEXUs = "nexus"
+    NEXUS = "nexus"
+
+class MavenRepository(str, Enum):
+    NEXUS = "nexus"

@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Optional, Union
 from enum import Enum
 
-from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository
+from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository, MavenRepository
 
 @dataclass
 class Args:
@@ -32,7 +32,7 @@ class Args:
         input_fp = Path(input_type)
         if self.action == Action.DOWNLOAD:
             if input_fp.exists() and input_fp.is_file():
-                return InputType.TXT_FILE
+                return InputType.FILE
             return InputType.PACKAGE
         elif self.action == Action.UPLOAD:
             if not input_fp.exists():
@@ -49,7 +49,9 @@ class Args:
         module_map = {
             Module.DOCKER: DockerRepository,
             Module.PYPI: PypiRepository,
-            Module.BITNAMI_HELM: HelmRepository}
+            Module.BITNAMI_HELM: HelmRepository,
+            Module.MAVEN: MavenRepository
+        }
         for module, cls in module_map.items():
             if self.module == module:
                 return cls(application)
