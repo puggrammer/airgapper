@@ -13,3 +13,4 @@ bin/distribution-tooling-for-helm/
 bin/apache-maven*
 bin/nexus/nexus-data
 input/test/output/test
+airgapper-deb/build
