@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## v0.2.0 (2025-07-14)
+
+### Feature
+
+* feat: added pyinstaller ([`d0f82a5`](https://github.com/puggrammer/airgapper/commit/d0f82a5b42a61bf643b9011fe17b9983f7049e6e))
+
+### Unknown
+
+* Merge pull request #5 from puggrammer/add-deb-release
+
+Add deb release ([`8e1e94f`](https://github.com/puggrammer/airgapper/commit/8e1e94f80cfb3ef74fc4fd9ba1c675ae9f99e53d))
+
+* changed name ([`ce8f6d4`](https://github.com/puggrammer/airgapper/commit/ce8f6d4051685ced46a302c499649f6d4a3f449b))
+
+* added upload ([`c868767`](https://github.com/puggrammer/airgapper/commit/c86876741346f1067efc381dc9f126d141f94f23))
+
+* Merge pull request #4 from puggrammer/add-maven
+
+Add maven ([`6e4eb38`](https://github.com/puggrammer/airgapper/commit/6e4eb38851c4f3e2419c1e58e5ed2bd9ff3de158))
+
+* updated README ([`70609bf`](https://github.com/puggrammer/airgapper/commit/70609bfea56c1977e3c029980b4b8dff702e6494))
+
+* completed maven support ([`a9cb903`](https://github.com/puggrammer/airgapper/commit/a9cb903d992e452b796bb721f77c4fe4030544d3))
+
+* wip ([`417f2fc`](https://github.com/puggrammer/airgapper/commit/417f2fc665cf8a14f4fafcc869f2a88a76b64341))
+
+* wip ([`8acc5fb`](https://github.com/puggrammer/airgapper/commit/8acc5fb19d096cebfc67d95471e733dbb94a450e))
+
 ## v0.1.6 (2024-10-11)
 
 ### Fix
