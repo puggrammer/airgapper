@@ -48,7 +48,7 @@ jobs:
     - name: Upload Deb distribution
       uses: actions/upload-artifact@v4
       with:
-        name: release-dists
+        name: airgapper
         path: airgapper-deb/dist/airgapper
           
     - name: Python Semantic Release
