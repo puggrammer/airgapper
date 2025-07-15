@@ -1,13 +1,13 @@
-{
-    "branches": [
-        {
-            "name": "master",
-            "channel": "stable"
-        },
-        {
-            "name": "fix-deb-publish",
-            "channel": "beta",
-            "prerelease": true
-        }
-    ]
-}
+// {
+//     "branches": [
+//         {
+//             "name": "master",
+//             "channel": "stable"
+//         },
+//         {
+//             "name": "fix-deb-publish",
+//             "channel": "beta",
+//             "prerelease": true
+//         }
+//     ]
+// }

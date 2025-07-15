@@ -49,3 +49,11 @@ disable = [
 
 [tool.semantic_release]
 version_variables = ["src/airgapper/version.py:__version__"]
+
+
+[tool.semantic_release.branch]
+# Production branch (stable release)
+main = { channel = "stable" }
+
+# Prerelease branch
+fix-deb-publish = { prerelease = true, channel = "beta" }
