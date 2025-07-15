@@ -40,25 +40,50 @@ class BitnamiHelmHelper:
     #         raise Exception("✖ Helm not installed. Please install helm at https://helm.sh/docs/intro/install/")
 
     def check_dt_installed(self):
+        possible_dt_fps = []
+        # Check when env var is inserted
         if self.DT_DIR:
-            dt_fp = Path(self.DT_DIR) / "dt"
-            if dt_fp.exists() and dt_fp.is_file():
+            possible_dt_fps.append(Path(self.DT_DIR) / "dt")                    
+        # Check if using Pyinstaller one-file 
+        if hasattr(sys, '_MEIPASS'):  # Check if running in PyInstaller bundle, Extracted bundle path for PyInstaller
+            possible_dt_fps.append(Path(sys._MEIPASS)/"bin/linux_amd64/dt")
+        # Check if Normal script location or using Pyinstaller one-folder bundle 
+        possible_dt_fps.append(Path(__file__).parents[3]/"bin/linux_amd64/dt")  
+        # Check if installed as executable package in os (eg. /usr/local/bin)
+        possible_dt_fps.append("dt") 
+        
+        for dt_fp in possible_dt_fps:
+            try:
+                print(f"Checking for dt executable at {dt_fp}")
+                if not dt_fp.exists() or not dt_fp.is_file():
+                    print("failed1")
+                    continue
+                resp = subprocess.run(
+                    [dt_fp, "version"], capture_output=True, text=True, check=False, shell=True
+                )
+                if resp.returncode:
+                    print(resp.stderr)
+                    print(resp.stdout)
+                    continue
                 self.dt_fp = dt_fp.as_posix()
+                print(f"dt executable detected at {dt_fp}")
+                self.dt_fp = dt_fp
                 return
-
-        resp = subprocess.run(
-            ["dt", "version"], capture_output=True, text=True, check=False
-        )
-        if not resp.returncode:
-            print(resp.stdout)
-            self.dt_fp = "dt"
-            return
-
+            except Exception as e:
+                pass
+            
         raise AssertionError(
             "✖ dt plugin not installed."
             "Please download at github.com/vmware-labs/distribution-tooling-for-helm."
             "Install dt standalone at /usr/local/bin location."
         )
+        
+    def validate_dt_executable_fp(self, dt_fp):
+        print(f"Checking for dt executable at {dt_fp}")
+        if dt_fp.exists() and dt_fp.is_file():
+            self.dt_fp = dt_fp.as_posix()
+            return
+
 
     def download_helm_charts(self, args: Args):
         if platform.system() == "Windows":
@@ -90,7 +115,7 @@ class BitnamiHelmHelper:
         See inside what does the wrap.tgz contains
         """
         # Download helm chart
-        print(f"input_list: {input_list}")
+        print(f"input_list of helm charts to download: {input_list}")
         for chart in input_list:
             command = [self.dt_fp, "wrap", chart["chart"]]
             if chart["chart_version"]:

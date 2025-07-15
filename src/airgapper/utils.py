@@ -40,7 +40,7 @@ def run_command(command, **kwargs):
     )
 
     for c in iter(lambda: process.stdout.read(1), b""):
-        sys.stdout.buffer.write(c)
+        sys.stdout.buffer.write(c.encode('utf-8'))
 
     # stdout = []
     # while process.stdout:
