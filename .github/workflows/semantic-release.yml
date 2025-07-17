@@ -10,18 +10,15 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
     concurrency: build
     permissions:
       id-token: write
       contents: write
     strategy:
       matrix:
-        ubuntu_version: ["22.04"] #["22.04", "24.04"]
+        ubuntu-version: ["22.04"] #["22.04", "24.04"]
         python-version: ["3.11"] #["3.10", "3.11"]
-    container:
-      image: ubuntu:${{ matrix.ubuntu_version }}
-      options: --privileged  # Needed for dpkg-deb, fpm, etc.
+    runs-on: ${{ matrix.ubuntu-version}}
 
     steps:
     - name: Checkout Repository
@@ -63,7 +60,7 @@ jobs:
     - name: Upload .Deb Package
       uses: actions/upload-artifact@v4
       with:
-        name: airgapper-deb_${{ matrix.ubuntu_version }}-py_${{ matrix.python-version }}
+        name: airgapper-deb_${{ matrix.ubuntu-version }}-py_${{ matrix.python-version }}
         path: airgapper-deb/dist/airgapper
 
 
