@@ -29,7 +29,7 @@ build-backend = "setuptools.build_meta"
 # include = ["airgapper"]
 
 [tool.setuptools.dynamic]
-version = {attr = "airgapper.version.__version__"}
+version = { attr = "airgapper.version.__version__" }
 
 [tool.pytest.ini_options]
 pythonpath = ["tests"]
@@ -44,16 +44,18 @@ disable = [
     "missing-function-docstring",
     "missing-module-docstring",
     "missing-class-docstring",
-    "broad-exception-raised"
+    "broad-exception-raised",
 ]
 
 [tool.semantic_release]
 version_variables = ["src/airgapper/version.py:__version__"]
 
 
-[tool.semantic_release.branch]
-# Production branch (stable release)
-main = { channel = "stable" }
+[tool.semantic_release.branches.main]
+match = "(main|master)"
+prerelease = false
 
-# Prerelease branch
-fix-deb-publish = { prerelease = true, channel = "beta" }
+[tool.semantic_release.branches.alpha]
+match = ".+"
+prerelease = true
+prerelease_token = "alpha"

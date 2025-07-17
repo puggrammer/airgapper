@@ -7,19 +7,23 @@ on:
       - fix-deb-publish
 
 jobs:
-  release:
-    runs-on: ubuntu-22.04
-    concurrency: release
+  build:
+    runs-on: ubuntu-latest
+    concurrency: build
     permissions:
       id-token: write
       contents: write
     strategy:
       matrix:
-        python-version: ["3.11"]
-        #["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
-        
+        ubuntu_version: ["22.04"] #["22.04", "24.04"]
+        python-version: ["3.11"] #["3.10", "3.11"]
+    container:
+      image: ubuntu:${{ matrix.ubuntu_version }}
+      options: --privileged  # Needed for dpkg-deb, fpm, etc.
+
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout Repository
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         
@@ -27,6 +31,54 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Determine Package Semantic Versioning
+      # Adjust tag with desired version if applicable.
+      uses: python-semantic-release/python-semantic-release@v10.2.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        git_committer_name: "github-actions"
+        git_committer_email: "actions@users.noreply.github.com"
+
+    - name: Install project dependencies
+      run: |
+        pip install -U pip setuptools wheel build pyinstaller requests
+        pip install .
+
+    - name: Build Python Wheel Package
+      run: |
+        pip -m build
+
+    - name: Build .Deb Package
+      run: |
+        cd airgapper-deb
+        pyinstaller --name=airgapper --onefile --windowed ../src/airgapper/__main__.py
+
+    - name: Upload Python Wheel Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: airgapper-py_${{ matrix.python-version }}
+        path: dist/*.whl
+
+    - name: Upload .Deb Package
+      uses: actions/upload-artifact@v4
+      with:
+        name: airgapper-deb_${{ matrix.ubuntu_version }}-py_${{ matrix.python-version }}
+        path: airgapper-deb/dist/airgapper
+
+
+  release:
+    runs-on: ubuntu-22.04
+    concurrency: release
+    permissions:
+      id-token: write
+      contents: write
+        
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
         
     - name: Build Release Whl Distribution
       run: |
@@ -39,18 +91,18 @@ jobs:
         cd airgapper-deb
         pyinstaller --name=airgapper --onefile --windowed ../src/airgapper/__main__.py
 
-    - name: Upload Python Whl distribution
-      uses: actions/upload-artifact@v4
+    - name: Download built packages
+      uses: actions/download-artifact@v4
       with:
-        name: release-dists
-        path: dist/
+        path: artifacts
 
-    - name: Upload Deb distribution
-      uses: actions/upload-artifact@v4
+    - name: Publish to GitHub Release
+      uses: python-semantic-release/publish-action@v10.2.0
       with:
-        name: airgapper
-        path: airgapper-deb/dist/airgapper
-          
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        upload-assets: |
+          artifacts/**/**/*
+
     # - name: Determine Package Semantic Versioning 
     #   uses: python-semantic-release/python-semantic-release@v9.8.7
     #   with:
@@ -71,41 +123,34 @@ jobs:
     #     draft: false  # Set to true if you want to create a draft release
     #     prerelease: false  # Set to true if you want to make it a prerelease
 
-    - name: Action | Semantic Version Release (Determine Package Semantic Versioning)
-      # Adjust tag with desired version if applicable.
-      uses: python-semantic-release/python-semantic-release@v10.2.0
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        git_committer_name: "github-actions"
-        git_committer_email: "actions@users.noreply.github.com"
-
-    - name: Publish | Upload to GitHub Release Assets
-      uses: python-semantic-release/publish-action@v10.2.0
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ steps.release.outputs.tag }}
-
-    # - name: Upload | Distribution Artifacts
-    #   uses: actions/upload-artifact@v4
+    # - name: Action | Semantic Version Release (Determine Package Semantic Versioning)
+    #   # Adjust tag with desired version if applicable.
+    #   uses: python-semantic-release/python-semantic-release@v10.2.0
     #   with:
-    #     name: distribution-artifacts
-    #     path: dist
-    #     if-no-files-found: error
-        
-  pypi-publish:
-    runs-on: ubuntu-latest
-    needs: release
-    permissions:
-      id-token: write
-    steps:
-    - name: Retrieve release distributions
-      uses: actions/download-artifact@v4
-      with:
-        name: release-dists
-        path: dist/
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     git_committer_name: "github-actions"
+    #     git_committer_email: "actions@users.noreply.github.com"
 
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      # NOTE: DO NOT wrap the conditional in ${{ }} as it will always evaluate to true.
-      # See https://github.com/actions/runner/issues/1173
-      # if: steps.release.outputs.released == 'true'
+    # - name: Publish | Upload to GitHub Release Assets
+    #   uses: python-semantic-release/publish-action@v10.2.0
+    #   with:
+    #     github_token: ${{ secrets.GITHUB_TOKEN }}
+    #     tag: ${{ steps.release.outputs.tag }}
+
+
+        
+  # pypi-publish:
+  #   runs-on: ubuntu-latest
+  #   needs: release
+  #   permissions:
+  #     id-token: write
+  #   steps:
+  #   - name: Retrieve release distributions
+  #     uses: actions/download-artifact@v4
+  #     with:
+  #       name: release-dists
+  #       path: dist/
+
+  #   - name: Publish package distributions to PyPI
+  #     uses: pypa/gh-action-pypi-publish@release/v1
+
