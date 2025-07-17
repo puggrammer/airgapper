@@ -49,6 +49,7 @@ disable = [
 
 [tool.semantic_release]
 version_variables = ["src/airgapper/version.py:__version__"]
+upload_to_release = true
 
 
 [tool.semantic_release.branches.main]
