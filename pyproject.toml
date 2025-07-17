@@ -49,14 +49,19 @@ disable = [
 
 [tool.semantic_release]
 version_variables = ["src/airgapper/version.py:__version__"]
-upload_to_release = true
-
+commit_parser = "conventional"
+commit_parser_options = { parse_squash_commits = true, ignore_merge_commits = true }
+version_source = "tag"
+major_on_zero = false
 
 [tool.semantic_release.branches.main]
-match = "(main|master)"
+match = "^(main|master)$"
 prerelease = false
 
 [tool.semantic_release.branches.alpha]
 match = ".+"
 prerelease = true
 prerelease_token = "alpha"
+
+[tool.semantic_release.publish]
+upload_to_vcs_release = true
