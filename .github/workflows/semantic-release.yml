@@ -18,7 +18,7 @@ jobs:
       matrix:
         ubuntu-version: ["22.04"] #["22.04", "24.04"]
         python-version: ["3.11"] #["3.10", "3.11"]
-    runs-on: ${{ matrix.ubuntu-version}}
+    runs-on: ubuntu-${{ matrix.ubuntu-version}}
 
     steps:
     - name: Checkout Repository
