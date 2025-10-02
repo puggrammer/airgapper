@@ -203,6 +203,39 @@ _Below is an example of how you can instruct your audience on installing and set
 
 Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
 
+### 🔧 Environment Variables
+
+Environment variables allow you to configure the behavior of the application without modifying the source code. This makes it easier to manage different environments (development, staging, production) and keep sensitive information out of version control.
+
+#### 📦 Global Common Variables
+
+| Variable Name             | Description                                                                 | Default Value              |
+|---------------------------|-----------------------------------------------------------------------------|----------------------------|
+| `TMP`                 | Specifies the runtime environment                                           | `development`, `production`|
+| `AIRGAPPER_INSECURE`      | Set to `true` to disable TLS verification for registry connections.         | `false` |
+
+#### Helm Parameters
+| Variable Name             | Description                                                                 | Value              |
+|----------------------|----------------------------------------------------------------------------------|----------------------------|
+| `AIRGAPPER_DT_DIRECTORY`    | directory containing dt binary.                                           | "" |
+
+#### Harbor Registry Par
+| Variable Name             | Description                                                                 | Value                      |
+|---------------------------|-----------------------------------------------------------------------------|----------------------------|
+| `AIRGAPPER_HARBOR_URL`    | Base URL of the Harbor container registry                                   | 127.0.1.1:8090             |
+| `AIRGAPPER_HARBOR_USER`   | Harbor username                                                             | admin                      |
+| `AIRGAPPER_HARBOR_PASS`   | Harbor password                                                             | Harbor12345                |
+| `AIRGAPPER_HARBOR_PROJECT`| Harbor project namespace to upload image                                    | library                    |
+
+#### Nexus Registry Par
+| Variable Name                 | Description                                                                 | Value                   |
+|-------------------------------|-----------------------------------------------------------------------------|-------------------------|
+| `AIRGAPPER_NEXUS_URL`         | Base URL of Nexus registry                                                  | http://127.0.0.1:8091   |
+| `AIRGAPPER_NEXUS_DOCKER_URL`  | Docker-specific URL of Nexus registry                                       | "127.0.0.1:8092"        |
+| `AIRGAPPER_NEXUS_USER`        | Nexus username                                                              | admin                   |
+| `AIRGAPPER_NEXUS_PASS`        | Nexus password                                                              | nexus                   |
+
+
 ### Maven
 
 #### Download
@@ -252,6 +285,65 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+
+###
+
+## Manual Helm Chart 
+how to install from a traditional helm repository?
+<!-- 1. helm repo add grafana https://grafana.github.io/helm-charts -->
+2. Pull helm chart to local directory
+```bash
+helm pull my-tempo-distributed --repo https://grafana.github.io/helm-charts/grafana/tempo-distributed --version 1.48.0 --untar
+helm dependency update
+```
+3. Create the image annotations section in Chart.yml, as shown in `https://github.com/vmware-labs/distribution-tooling-for-helm`<br>
+run `dt charts annotate ./` first
+```yaml
+# Sample Chart.yml from bitnami's helm chart
+annotations:
+  images: |
+    - name: grafana-tempo
+      image: docker.io/bitnami/grafana-tempo:2.8.2-debian-12-r1
+    - name: grafana-tempo-query
+      image: docker.io/bitnami/grafana-tempo-query:2.8.2-debian-12-r1
+    - name: grafana-tempo-vulture
+      image: docker.io/bitnami/grafana-tempo-vulture:2.8.2-debian-12-r1
+    - name: os-shell
+      image: docker.io/bitnami/os-shell:12-debian-12-r50
+  licenses: Apache-2.0
+  tanzuCategory: application
+apiVersion: v2
+appVersion: 2.8.2
+description: Grafana Tempo is a distributed tracing system that has out-of-the-box
+  integration with Grafana. It is highly scalable and works with many popular tracing
+  protocols.
+version: 5.0.1
+```
+4. Extract all the docker images (search for term `repository:`) and their tags in values.yml.
+```yaml
+# Sample values.yaml from grafana tempo-distributed official helm chart
+
+.
+.
+# Configuration for the query-frontend
+queryFrontend:
+  query:
+    # -- Required for grafana version <7.5 for compatibility with jaeger-ui. Doesn't work on ARM arch
+    enabled: false
+    image:
+      # -- The Docker registry for the tempo-query image. Overrides `tempo.image.registry`
+      registry: null
+      # -- Optional list of imagePullSecrets. Overrides `tempo.image.pullSecrets`
+      pullSecrets: []
+      # -- Docker image repository for the tempo-query image. Overrides `tempo.image.repository`
+      repository: grafana/tempo-query
+      # -- Docker image tag for the tempo-query image. Overrides `tempo.image.tag`
+      tag: null
+```
+5. If tag is null, tag is likely the same tag as the `appVersion` in Chart.yaml.<br>
+Search & verify the tag. Eg. `https://hub.docker.com/r/grafana/tempo-query/tags?name=2.8.2`
+6. Extract all the docker images (search for term `image:`) and their tags in used in */templates/
+7. `dt wrap ./`
 
 
 <!-- ROADMAP -->
