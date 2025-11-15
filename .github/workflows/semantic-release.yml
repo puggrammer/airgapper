@@ -83,20 +83,23 @@ jobs:
       with:
         path: artifacts
 
-    - name: Get latest tag
-      id: get_tag
-      run: echo "tag=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-
     - name: Publish to GitHub Release
       uses: python-semantic-release/publish-action@v10.2.0
+      id: semrel
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Checkout updated commit
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ steps.semrel.outputs.released_sha }}
+        fetch-depth: 0
 
     - name: Upload release assets
       uses: softprops/action-gh-release@v1
       with:
         files: artifacts/**/*
-        tag_name: ${{ steps.get_tag.outputs.tag }}
+        tag_name: ${{ steps.semrel.outputs.tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
