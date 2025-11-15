@@ -85,6 +85,8 @@ jobs:
     - name: Publish to GitHub Release
       uses: python-semantic-release/publish-action@v10.2.0
       id: semrel
+      env:
+        SEMANTIC_RELEASE_BUILD: "true"
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
