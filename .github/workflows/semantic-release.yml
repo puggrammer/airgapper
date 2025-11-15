@@ -6,7 +6,7 @@ on:
       - master
       - fix-github-actions
   release:
-    types: [published, prereleased]
+
 
 jobs:
   build:
@@ -87,7 +87,14 @@ jobs:
       uses: python-semantic-release/publish-action@v10.2.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        assets: artifacts/**
+
+    - name: Upload release assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          artifacts/**/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # - name: Determine Package Semantic Versioning 
     #   uses: python-semantic-release/python-semantic-release@v9.8.7
