@@ -89,6 +89,20 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Log semantic-release outputs
+      run: |
+        echo "released:       ${{ steps.semrel.outputs.released }}"
+        echo "version:        ${{ steps.semrel.outputs.version }}"
+        echo "tag:            ${{ steps.semrel.outputs.tag }}"
+        echo "released_sha:   ${{ steps.semrel.outputs.released_sha }}"
+    
+    # IMPORTANT: Skip if no release was created
+    - name: Stop if no new release
+      if: steps.semrel.outputs.released != 'true'
+      run: |
+        echo "No release created by semantic-release — skipping asset upload."
+        exit 0
+
     - name: Checkout updated commit
       uses: actions/checkout@v4
       with:
@@ -96,13 +110,14 @@ jobs:
         fetch-depth: 0
 
     - name: Upload release assets
-      uses: softprops/action-gh-release@v1
+      uses: softprops/action-gh-release@v2
       with:
         files: artifacts/**/*
         tag_name: ${{ steps.semrel.outputs.tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+        
     # - name: Determine Package Semantic Versioning 
     #   uses: python-semantic-release/python-semantic-release@v9.8.7
     #   with:
