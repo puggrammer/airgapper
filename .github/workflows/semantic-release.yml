@@ -95,8 +95,7 @@ jobs:
     - name: Upload release assets
       uses: softprops/action-gh-release@v1
       with:
-        files: |
-          artifacts/**/
+        files: artifacts/**/*
         tag_name: ${{ steps.get_tag.outputs.tag }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
