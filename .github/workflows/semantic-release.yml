@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - fix-github-actions
-  release:
 
 
 jobs:
