@@ -8,115 +8,194 @@ on:
 
 
 jobs:
-  build:
-    concurrency: build
+  release:
+    concurrency:
+      group: ${{ github.workflow }}-release-${{ github.ref_name }}
     permissions:
       id-token: write
       contents: write
+    runs-on: ubuntu-22.04
+
+    outputs:
+      released: ${{ steps.release.outputs.released || 'false' }}
+      tag: ${{ steps.release.outputs.tag }}
+
+    steps:
+      # Checkout the repository at the branch that triggered the workflow.
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        ref: ${{ github.ref_name }}
+
+      # Forcefully reset the branch to the workflow sha 
+      # it is possible that the branch was updated while the workflow was running, 
+      # which prevents accidentally releasing un-evaluated changes.
+    - name: Force release branch to be at workflow SHA
+      run: |
+        git reset --hard ${{ github.sha }}
+
+    - name: Semantic Version Release
+      uses: python-semantic-release/python-semantic-release@v10.5.2
+      id: release
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+  # Matrix job: build per Python/Ubuntu combo and attach artifacts to the tag from above
+  build-and-publish:
+    needs: release
+    if: needs.release.outputs.released == 'true'   # skip if no new release
+    concurrency:
+      group: ${{ github.workflow }}-build-${{ github.ref_name }}
+    permissions:
+      contents: write   # needed so publish-action can upload assets to the release
     strategy:
+      fail-fast: false
       matrix:
         ubuntu-version: ["22.04"] #["22.04", "24.04"]
         python-version: ["3.11"] #["3.10", "3.11"]
     runs-on: ubuntu-${{ matrix.ubuntu-version}}
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout tag created by semantic-release
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # This is the tag name output by the release job (e.g. v1.2.3)
+          ref: ${{ needs.release.outputs.tag }}
+
+      - name: Setup Python # Set Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Project Dependencies
+        run: |
+          pip install -U pip setuptools wheel build pyinstaller requests
+          pip install .
+
+      - name: Build Python Wheel Package
+        run: |
+          python -m build --wheel
+          
+      - name: Build .Deb Package
+        run: |
+          cd airgapper-deb
+          pyinstaller --name=airgapper --onefile --windowed ../src/airgapper/__main__.py
+          
+        # Prepare a per-matrix dist/ directory that contains all artifacts you want on the release
+      - name: Collect release artifacts
+        run: |
+          mkdir -p upload
+          # copy wheel(s)
+          cp dist/*.whl upload/
+          # copy binary, but give it a unique name per matrix combo
+          cp airgapper-deb/dist/airgapper \
+             upload/airgapper-${{ matrix.ubuntu-version }}-py${{ matrix.python-version }}
+
+          # Move everything into dist/ because python-semantic-release
+          # expects artifacts to live there for `publish` by default.
+          rm -rf dist
+          mv upload dist
+
+      - name: Upload to GitHub Release Assets
+        uses: python-semantic-release/publish-action@v10.5.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ needs.release.outputs.tag }}
+
+
+#     steps:
+#       # Checkout the repository at the branch that triggered the workflow.
+#     - name: Checkout Repository
+#       uses: actions/checkout@v4
+#       with:
+#         fetch-depth: 0
+#         ref: ${{ github.ref_name }}
+
+#       # Forcefully reset the branch to the workflow sha 
+#       # it is possible that the branch was updated while the workflow was running, 
+#       # which prevents accidentally releasing un-evaluated changes.
+#     - name: Force release branch to be at workflow SHA
+#       run: |
+#         git reset --hard ${{ github.sha }}
+
+
+#     - name: Semantic Version Release
+#       uses: python-semantic-release/python-semantic-release@v10.5.2
+#       id: release
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+#     - name: Build Python Wheel Package
+#       run: |
+#         python -m build
+
+
+
+#     - name: Upload Python Wheel Package
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: airgapper-py_${{ matrix.python-version }}
+#         path: dist/*.whl
+
+#     - name: Upload .Deb Package
+#       uses: actions/upload-artifact@v4
+#       with:
+#         name: airgapper-deb_${{ matrix.ubuntu-version }}-py_${{ matrix.python-version }}
+#         path: airgapper-deb/dist/airgapper
+
+#     - name: Publish | Upload to GitHub Release Assets
+#       uses: python-semantic-release/publish-action@v10.5.2
+#       if: steps.release.outputs.released == 'true'
+#       with:
+#         github_token: ${{ secrets.GITHUB_TOKEN }}
+#         tag: ${{ steps.release.outputs.tag }}
+
         
-    - name: Setup Python # Set Python version
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
+#     # - name: Download built packages
+#     #   uses: actions/download-artifact@v4
+#     #   with:
+#     #     path: artifacts
 
-    - name: Determine Package Semantic Versioning
-      # Adjust tag with desired version if applicable.
-      uses: python-semantic-release/python-semantic-release@v10.5.2
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+#     # - name: Publish to GitHub Release
+#     #   uses: python-semantic-release/publish-action@v10.2.0
+#     #   id: semrel
+#     #   env:
+#     #     SEMANTIC_RELEASE_BUILD: "true"
+#     #   with:
+#     #     github_token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Install project dependencies
-      run: |
-        pip install -U pip setuptools wheel build pyinstaller requests
-        pip install .
-
-    - name: Build Python Wheel Package
-      run: |
-        python -m build
-
-    - name: Build .Deb Package
-      run: |
-        cd airgapper-deb
-        pyinstaller --name=airgapper --onefile --windowed ../src/airgapper/__main__.py
-
-    - name: Upload Python Wheel Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: airgapper-py_${{ matrix.python-version }}
-        path: dist/*.whl
-
-    - name: Upload .Deb Package
-      uses: actions/upload-artifact@v4
-      with:
-        name: airgapper-deb_${{ matrix.ubuntu-version }}-py_${{ matrix.python-version }}
-        path: airgapper-deb/dist/airgapper
-
-
-  release:
-    needs: build
-    runs-on: ubuntu-22.04
-    concurrency: release
-    permissions:
-      id-token: write
-      contents: write
-        
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Download built packages
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
-
-    - name: Publish to GitHub Release
-      uses: python-semantic-release/publish-action@v10.2.0
-      id: semrel
-      env:
-        SEMANTIC_RELEASE_BUILD: "true"
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Log semantic-release outputs
-      run: |
-        echo "released:       ${{ steps.semrel.outputs.released }}"
-        echo "version:        ${{ steps.semrel.outputs.version }}"
-        echo "tag:            ${{ steps.semrel.outputs.tag }}"
-        echo "released_sha:   ${{ steps.semrel.outputs.released_sha }}"
+#     - name: Log semantic-release outputs
+#       run: |
+#         echo "released:       ${{ steps.semrel.outputs.released }}"
+#         echo "version:        ${{ steps.semrel.outputs.version }}"
+#         echo "tag:            ${{ steps.semrel.outputs.tag }}"
+#         echo "released_sha:   ${{ steps.semrel.outputs.released_sha }}"
     
-    # IMPORTANT: Skip if no release was created
-    - name: Stop if no new release
-      if: steps.semrel.outputs.released != 'true'
-      run: |
-        echo "No release created by semantic-release — skipping asset upload."
-        exit 0
+#     # IMPORTANT: Skip if no release was created
+#     - name: Stop if no new release
+#       if: steps.semrel.outputs.released != 'true'
+#       run: |
+#         echo "No release created by semantic-release — skipping asset upload."
+#         exit 0
 
-    - name: Checkout updated commit
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ steps.semrel.outputs.released_sha }}
-        fetch-depth: 0
+#     - name: Checkout updated commit
+#       uses: actions/checkout@v4
+#       with:
+#         ref: ${{ steps.semrel.outputs.released_sha }}
+#         fetch-depth: 0
 
-    - name: Upload release assets
-      uses: softprops/action-gh-release@v2
-      with:
-        files: artifacts/**/*
-        tag_name: ${{ steps.semrel.outputs.tag }}
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#     - name: Upload release assets
+#       uses: softprops/action-gh-release@v2
+#       with:
+#         files: artifacts/**/*
+#         tag_name: ${{ steps.semrel.outputs.tag }}
+#       env:
+#         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
         
     # - name: Determine Package Semantic Versioning 
