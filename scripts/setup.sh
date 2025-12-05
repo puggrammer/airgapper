@@ -14,10 +14,12 @@ OVERALL_SUCCESS=true   # Track overall status
 
 # Initialise variables, to be set later from user input
 PROJECT_DIR=""
-IMAGE_NAME=""
 VERSION=""
 FULL_IMAGE_NAME=""
 SAVE_TAR=""
+
+IMAGE_NAME="airgapper"
+TAG_NAME=""
 
 
 # -------------------------------
@@ -97,7 +99,40 @@ build_docker_image() {
   fi
 }
 
+get_latest_release_version() {
+  echo "        Fetching latest release information..."
 
+  # Fetch release info
+  if ! release_resp=$(curl -sS -f "https://api.github.com/repos/puggrammer/airgapper/releases/latest"); then
+    echo "  ✖  Error: Failed to fetch latest release info from GitHub. Check internet connection and retry again..." >&2
+    OVERALL_SUCCESS=false
+    exit 1
+  fi
+
+  # Extract tag name
+  TAG_NAME=$(echo "$release_resp" | grep "tag_name" | sed 's/^ *//;s/,*$//' | cut -d: -f2 | sed 's/^ *//' | tr -d '\"' )
+
+  if [[ -z "$TAG_NAME" ]]; then
+    echo "  ✖  Error: Failed to extract tag_name using grep/sed/cut" >&2
+    echo "  Response was: $release_resp" >&2
+    exit 1
+  fi
+
+  echo "        Latest tag name is: $TAG_NAME"
+  FULL_IMAGE_NAME="$IMAGE_NAME:$TAG_NAME"
+}
+
+
+# Pull docker image
+pull_docker_image() {
+  echo -e "\n[2/$NUM_STEPS] Pulling Docker image..."
+  get_latest_release_version
+
+  local image_url="ghcr.io/puggrammer/airgapper:$TAG_NAME"
+  echo "        Pulling image from $image_url"
+  docker pull "$image_url"
+  echo "  ✔  Docker image airgapper:$TAG_NAME pulled successfully."
+}
 
 
 # Save docker image to tar file
@@ -155,6 +190,7 @@ trap print_summary EXIT
 verify_docker_installed
 init
 download_files $PROJECT_DIR
-build_docker_image $PROJECT_DIR
+pull_docker_image
+# build_docker_image $PROJECT_DIR
 save_tar $FULL_IMAGE_NAME $IMAGE_NAME $PROJECT_DIR
 
