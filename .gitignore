@@ -14,3 +14,4 @@ bin/apache-maven*
 bin/nexus/nexus-data
 input/test/output/test
 airgapper-deb/build
+bin/harbor-v2.13.2/

@@ -22,6 +22,7 @@ from airgapper.dataclasses import Args
 from airgapper.modules.docker import upload_docker_images_nexus
 from airgapper.modules import PypiHelper, BitnamiHelmHelper
 from airgapper.modules.maven_helper import MavenHelper
+from airgapper.version import __version__
 
 # Configs
 
@@ -79,6 +80,12 @@ parser.add_argument(
     help="[UPLOAD] Registry hostname.",
 )
 
+parser.add_argument(
+    '-v',
+    '--version',
+    action='version',
+    version=f'Airgapper {__version__}',
+)
 
 def print_intro():
     print("============================================================")
