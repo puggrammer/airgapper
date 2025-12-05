@@ -1,9 +1,10 @@
+import sys
 from pathlib import Path
 
 from airgapper.enum import InputType
 from airgapper.dataclasses import Args
 from airgapper.repositories import NexusHelper
-from airgapper.utils import pretty_print_response, run_command
+from airgapper.utils import pretty_print_response, run_command, pretty_print_completedprocess, run_command_with_stdout, pretty_print_summary
 
 
 class PypiHelper:
@@ -21,14 +22,17 @@ class PypiHelper:
 
             # Download pypi packages
             proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, args.input], text=True)
+            pretty_print_summary(f"Completed pip download with status code {proc.returncode}")
             # pretty_print_completedprocess(proc)
 
         elif args.input_type == InputType.FILE:
             # Download pypi packages
-            proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, "-r", args.input], text=True)
+            proc = run_command(["pip", "download", "--no-cache-dir", "-d", output_dir, "-r", args.input],
+                               text=True)
+            pretty_print_summary(f"Completed pip download with status code {proc.returncode}")
             # pretty_print_completedprocess(proc)
         else:
-            raise Exception("No implmentation for provided InputType.")
+            raise Exception("No implementation for provided InputType.")
 
     def upload_pypi_packages_nexus(self, args: Args):
         nexus = NexusHelper(url=args.registry, repository=args.repository)

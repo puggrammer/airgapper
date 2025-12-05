@@ -4,7 +4,7 @@ import subprocess
 from pathlib import Path
 from airgapper.dataclasses import Args
 from airgapper.enum import InputType
-from airgapper.utils import run_command
+from airgapper.utils import run_command, pretty_print_summary
 from airgapper.repositories import NexusHelper
 
 
@@ -40,10 +40,10 @@ class MavenHelper:
                     f"-DoutputDirectory={args.output_dir}",
                     "-f",
                     args.input,
-                ]
-            )
+                ])
+            pretty_print_summary(f"Completed maven download with status code {proc.returncode}")
         else:
-            raise Exception("No implmentation for provided InputType.")
+            raise Exception("No implementation for provided InputType.")
 
     def upload_maven_packages(self, args: Args):
         nexus = NexusHelper(url=args.registry, repository=args.repository)

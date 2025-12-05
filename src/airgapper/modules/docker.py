@@ -6,7 +6,7 @@ from pathlib import Path
 
 from airgapper.enum import InputType
 from airgapper.dataclasses import Args
-from airgapper.utils import check_docker, run_command, run_command_with_stdout
+from airgapper.utils import check_docker, run_command, run_command_with_stdout, pretty_print_summary
 from airgapper.repositories import HarborHelper, NexusHelper
 
 def download_docker_images(args: Args):
@@ -28,15 +28,21 @@ def download_docker_images(args: Args):
         dl_image = run_command(["docker", "pull", image_name], text=True)
         if dl_image.returncode:
             print(dl_image.stderr)
-            raise Exception("Exception occured during downloading images.")
+            raise Exception("Exception occurred during downloading images.")
 
     # Tar images
+    is_docker_save_successful = True
     for image_name in input_list:
         tar_fp = output_dir / _get_sanitized_tar_filename(image_name)
         print(f"saving to {tar_fp}")
         tar_image = run_command(["docker","save","--output", tar_fp, image_name])
         if tar_image.returncode:
-            print("Exception occured during saving images to tar.")
+            is_docker_save_successful = False
+            print("Exception occurred during saving images to tar.")
+    docker_save_status = "Completed" if is_docker_save_successful else "FAILED"
+
+    # Print summary
+    pretty_print_summary(f"Completed docker image download \n{docker_save_status} saving docker image to tar")
 
 
 def upload_docker_images_harbor(args: Args):

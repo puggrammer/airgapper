@@ -50,8 +50,8 @@ class BitnamiHelmHelper:
         # Check if Normal script location or using Pyinstaller one-folder bundle 
         possible_dt_fps.append(Path(__file__).parents[3]/"bin/linux_amd64/dt")  
         # Check if installed as executable package in os (eg. /usr/local/bin)
-        possible_dt_fps.append("dt") 
-        
+        possible_dt_fps.append(Path("/usr/local/bin/dt"))
+
         for dt_fp in possible_dt_fps:
             try:
                 print(f"Checking for dt executable at {dt_fp}")
@@ -181,7 +181,7 @@ class BitnamiHelmHelper:
                 if os.environ.get("AIRGAPPER_INSECURE"):
                     print("AIRGAPPER_INSECURE flag. Using http protocol..")
                     command.append("--insecure")
-                unwrap_cmd = run_command(command, text=True)
+                unwrap_cmd = run_command(command, text=True, bufsize=1)
                 if unwrap_cmd.returncode:
                     raise Exception(unwrap_cmd.stderr)
         finally:

@@ -36,11 +36,21 @@ def run_command(command, **kwargs):
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        stdin=subprocess.DEVNULL,
         **kwargs
     )
 
-    for c in iter(lambda: process.stdout.read(1), b""):
-        sys.stdout.buffer.write(c.encode('utf-8'))
+    is_text_output = "text" in kwargs
+
+    if is_text_output:
+        for c in iter(lambda: process.stdout.read(1), ""):
+            sys.stdout.buffer.write(c.encode('utf-8'))
+            sys.stdout.buffer.flush()
+    else:
+        for c in iter(lambda: process.stdout.read(1), b""):
+            sys.stdout.buffer.write(c)
+            sys.stdout.buffer.flush()
+
 
     # stdout = []
     # while process.stdout:
@@ -71,6 +81,10 @@ def run_command_with_stdout(command, **kwargs):
         print(line, end='')
     stdout = ''.join(stdout)
     return process, stdout
+
+def pretty_print_summary(msg: str) -> None:
+    print(f"\n{'=' * 60}\nSUMMARY: \n{msg}")
+
 
 #############################################
 # Test Helpers
