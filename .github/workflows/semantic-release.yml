@@ -53,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ubuntu-version: ["22.04"] #["22.04", "24.04"]
+        ubuntu-version: ["22.04", "24.04"]
         python-version: ["3.11"] #["3.10", "3.11"]
     runs-on: ubuntu-${{ matrix.ubuntu-version}}
 
@@ -91,8 +91,7 @@ jobs:
           # copy wheel(s)
           cp dist/*.whl upload/
           # copy binary, but give it a unique name per matrix combo
-          cp airgapper-deb/dist/airgapper \
-             upload/airgapper-${{ matrix.ubuntu-version }}-py${{ matrix.python-version }}
+          cp airgapper-deb/dist/airgapper upload/airgapper-${{ needs.release.outputs.tag }}-${{ matrix.ubuntu-version }}-py${{ matrix.python-version }}
 
           # Move everything into dist/ because python-semantic-release
           # expects artifacts to live there for `publish` by default.
