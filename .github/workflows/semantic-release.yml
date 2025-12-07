@@ -99,11 +99,20 @@ jobs:
           rm -rf dist
           mv upload dist
 
-      - name: Upload to GitHub Release Assets
-        uses: python-semantic-release/publish-action@v10.5.2
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ needs.release.outputs.tag }}
+          files: dist/**/*
+          tag_name: ${{ needs.release.outputs.tag }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Upload to GitHub Release Assets
+      #   uses: python-semantic-release/publish-action@v10.5.2
+      #   with:
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+      #     tag: ${{ needs.release.outputs.tag }}
 
 
 #     steps:
