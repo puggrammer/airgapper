@@ -120,7 +120,7 @@ jobs:
     - name: Get next release version
       id: semver
       run: |
-        VERSION=$(semantic-release --print-version)
+        VERSION=$(python -m semantic-release --print-version)
         echo "version=$VERSION" >> $GITHUB_OUTPUT
 
     - name: Log in to GHCR
