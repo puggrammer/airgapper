@@ -36,7 +36,7 @@ verify_docker_installed() {
 
 create_project_dir() {
   # Ask user for project directory name, with default
-  read -p "➤ Enter project directory name (default: airgapper): " PROJECT_DIR
+  read -r -p "➤ Enter project directory name (default: airgapper): " PROJECT_DIR
   PROJECT_DIR=${PROJECT_DIR:-airgapper}
 
   # Create project directory if it does not exist
@@ -71,7 +71,7 @@ download_files() {
   done
 
   if [ "$success" = true ]; then
-    echo "  ✔  All files downloaded to folder: $dir"
+    echo "   ✔  All files downloaded to folder: $dir"
   else
     echo "  ⚠️  Failed to download some files. Re-run this script to re-download all files."
   fi
@@ -84,16 +84,16 @@ build_docker_image() {
 
   echo -e "\n[2/$NUM_STEPS] Building Docker image..."
   if [ -f "$dir/Dockerfile" ]; then
-    read -p "        Enter image name for the Docker image (default: airgapper): " IMAGE_NAME
+    read -r -p "        Enter image name for the Docker image (default: airgapper): " IMAGE_NAME
     IMAGE_NAME=${IMAGE_NAME:-airgapper}
-    read -p "        Enter version tag for the Docker image (default: latest): " VERSION
+    read -r -p "        Enter version tag for the Docker image (default: latest): " VERSION
     VERSION=${VERSION:-latest}
     FULL_IMAGE_NAME="$IMAGE_NAME:$VERSION"
 
     docker build -t "$FULL_IMAGE_NAME" "$PROJECT_DIR"
-    echo "  ✔  Docker image '$FULL_IMAGE_NAME' built successfully."
+    echo "   ✔  Docker image '$FULL_IMAGE_NAME' built successfully."
   else
-    echo "  ✖  No Dockerfile found in $PROJECT_DIR. Re-run this script to download the Dockerfile."
+    echo "   ✖  No Dockerfile found in $PROJECT_DIR. Re-run this script to download the Dockerfile."
     OVERALL_SUCCESS=false
     exit 1
   fi
@@ -104,7 +104,7 @@ get_latest_release_version() {
 
   # Fetch release info
   if ! release_resp=$(curl -sS -f "https://api.github.com/repos/puggrammer/airgapper/releases/latest"); then
-    echo "  ✖  Error: Failed to fetch latest release info from GitHub. Check internet connection and retry again..." >&2
+    echo "   ✖  Error: Failed to fetch latest release info from GitHub. Check internet connection and retry again..." >&2
     OVERALL_SUCCESS=false
     exit 1
   fi
@@ -113,7 +113,7 @@ get_latest_release_version() {
   TAG_NAME=$(echo "$release_resp" | grep "tag_name" | sed 's/^ *//;s/,*$//' | cut -d: -f2 | sed 's/^ *//' | tr -d '\"' )
 
   if [[ -z "$TAG_NAME" ]]; then
-    echo "  ✖  Error: Failed to extract tag_name using grep/sed/cut" >&2
+    echo "   ✖  Error: Failed to extract latest release tag_name using grep/sed/cut" >&2
     echo "  Response was: $release_resp" >&2
     exit 1
   fi
@@ -131,7 +131,7 @@ pull_docker_image() {
   local image_url="ghcr.io/puggrammer/airgapper:$TAG_NAME"
   echo "        Pulling image from $image_url"
   docker pull "$image_url"
-  echo "  ✔  Docker image airgapper:$TAG_NAME pulled successfully."
+  echo "   ✔  Docker image airgapper:$TAG_NAME pulled successfully."
 }
 
 
@@ -149,7 +149,7 @@ save_tar() {
     TAR_FILE="${dir}/${tar_file_name}.tar"
     echo "        Saving image to $TAR_FILE ..."
     docker save -o "$TAR_FILE" "$image_name"
-    echo "  ✔  Image saved to $TAR_FILE"
+    echo "   ✔  Image saved to $TAR_FILE"
   else
     echo "      Skipping tar save"
   fi
@@ -189,8 +189,8 @@ trap print_summary EXIT
 
 verify_docker_installed
 init
-download_files $PROJECT_DIR
+download_files "$PROJECT_DIR"
 pull_docker_image
-# build_docker_image $PROJECT_DIR
-save_tar $FULL_IMAGE_NAME $IMAGE_NAME $PROJECT_DIR
+#build_docker_image "$PROJECT_DIR"
+save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
 
