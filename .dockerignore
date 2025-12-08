@@ -1,0 +1,55 @@
+# Ignore Python cache and virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+.env
+venv/
+.venv/
+
+# Ignore compiled code and binaries
+*.o
+*.out
+*.class
+*.exe
+*.dll
+*.so
+
+# Ignore logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Ignore version control directories
+.git
+.gitignore
+.gitattributes
+.hg
+.svn
+
+# Ignore Docker-related files
+Dockerfile*
+.dockerignore
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore build and dist directories
+dist/
+build/
+coverage/
+.cache/
+
+# Ignore IDE/editor settings
+.vscode/
+.idea/
+*.iml
+
+# Custom
+airgapper-deb/
+bin/
+input/
+scripts/
+tests/
