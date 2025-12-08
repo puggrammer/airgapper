@@ -193,4 +193,3 @@ download_files "$PROJECT_DIR"
 pull_docker_image
 #build_docker_image "$PROJECT_DIR"
 save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
-
