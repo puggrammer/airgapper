@@ -1,10 +1,12 @@
+import os
 from argparse import Namespace
 from dataclasses import dataclass
+from enum import Enum
 from pathlib import Path
 from typing import Optional, Union
-from enum import Enum
 
 from airgapper.enum import Action, DockerRepository, InputType, Module, PypiRepository, HelmRepository, MavenRepository
+
 
 @dataclass
 class Args:
@@ -23,9 +25,9 @@ class Args:
         self.input = args.input
         self.input_type = self.determine_input_type(self.input)
         self.output_dir = args.output_dir
-        self.registry = args.registry
         self.repository = args.repository
         self.application = self.determine_application(args.application)
+        self.registry = self.determine_registry(args.registry)
 
     def determine_input_type(self, input_type):
         # Check if file exist
@@ -57,3 +59,27 @@ class Args:
                 return cls(application)
         # Raise if no match
         raise NotImplementedError
+
+    def determine_registry(self, registry):
+        # Required for Upload Action
+        # Order of priority (desc):
+        # 1. CLI args
+        # 2. env var
+
+        if self.action == Action.DOWNLOAD:
+            return ""
+        if registry:
+            return registry
+
+        # Take registry URL from env
+        if self.application == DockerRepository.NEXUS:
+            if self.module == Module.DOCKER:
+                registry = os.getenv("AIRGAPPER_NEXUS_DOCKER_URL")
+            else:
+                registry = os.getenv("AIRGAPPER_NEXUS_URL")
+        elif self.application == DockerRepository.HARBOR:
+            registry = os.getenv("AIRGAPPER_HARBOR_URL")
+
+        if not registry:
+            raise ValueError("Registry URL is required for Upload. Please provide a registry URL in args or set in .env file.")
+        return registry
