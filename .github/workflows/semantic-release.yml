@@ -125,11 +125,7 @@ jobs:
     permissions:
       contents: read
       packages: write  # Needed to push to GHCR
-    strategy:
-      fail-fast: false
-      matrix:
-        ubuntu-version: [ "22.04", "24.04" ]
-    runs-on: ubuntu-${{ matrix.ubuntu-version}}
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout tag created by semantic-release
@@ -153,7 +149,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
+      - name: Extract metadata for Docker
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -170,15 +166,9 @@ jobs:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-#    - name: Build Docker image
-#      run: docker build -t ghcr.io/${{ github.repository }}:${{ steps.semrel.outputs.version }} .
-#
-#    - name: Push Docker image
-#      run: docker push ghcr.io/${{ github.repository }}:${{ steps.semrel.outputs.version }}
 
 #     steps:
 #       # Checkout the repository at the branch that triggered the workflow.
