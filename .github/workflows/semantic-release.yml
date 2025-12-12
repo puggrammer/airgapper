@@ -6,6 +6,7 @@ on:
       - master
       - fix-sem-ver
       - add-scripts
+  workflow_dispatch:  # allow manual trigger
   release:
     types: [published, prereleased]
 
