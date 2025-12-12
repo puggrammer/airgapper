@@ -8,18 +8,18 @@ Example:
 ./dt unwrap rabbitmq.wrap.tgz harbor.arpa/library --yes
 """
 
-import os
-import re
-import sys
 import logging
+import os
 import platform
+import re
 import subprocess
+import sys
 from pathlib import Path
 
-from airgapper.enum import InputType
 from airgapper.dataclasses import Args
-from airgapper.utils import run_command, pretty_print_response
+from airgapper.enum import InputType
 from airgapper.repositories import NexusHelper, HarborHelper
+from airgapper.utils import run_command, pretty_print_response, pretty_print_summary
 
 
 class BitnamiHelmHelper:
@@ -50,8 +50,8 @@ class BitnamiHelmHelper:
         # Check if Normal script location or using Pyinstaller one-folder bundle 
         possible_dt_fps.append(Path(__file__).parents[3]/"bin/linux_amd64/dt")  
         # Check if installed as executable package in os (eg. /usr/local/bin)
-        possible_dt_fps.append("dt") 
-        
+        possible_dt_fps.append(Path("/usr/local/bin/dt"))
+
         for dt_fp in possible_dt_fps:
             try:
                 print(f"Checking for dt executable at {dt_fp}")
@@ -130,6 +130,7 @@ class BitnamiHelmHelper:
             #     output_fp = output_dir/Path(file).name
             #     print(f'Moving {file} to {output_fp}')
             #     shutil.move(file, output_fp)
+        pretty_print_summary(f"Completed helm chart image download")
 
     def upload_helm_chart_nexus(self, args: Args):
         nexus = NexusHelper(url=args.registry, repository=args.repository)
@@ -148,7 +149,7 @@ class BitnamiHelmHelper:
             print(f"Uploading bitnami helm chart {file.name}..")
             resp = nexus.api_upload_helm_component(file)
             pretty_print_response(resp)
-        print("Uploading completed.")
+        pretty_print_summary("Upload helm chart to nexus completed!")
 
         # try:
         #     nexus.login_docker()
@@ -181,11 +182,12 @@ class BitnamiHelmHelper:
                 if os.environ.get("AIRGAPPER_INSECURE"):
                     print("AIRGAPPER_INSECURE flag. Using http protocol..")
                     command.append("--insecure")
-                unwrap_cmd = run_command(command, text=True)
+                unwrap_cmd = run_command(command, text=True, bufsize=1)
                 if unwrap_cmd.returncode:
                     raise Exception(unwrap_cmd.stderr)
         finally:
             harbor.logout()
+        pretty_print_summary("Upload helm chart to harbor completed!")
 
     @staticmethod
     def extract_chart_and_version(text):

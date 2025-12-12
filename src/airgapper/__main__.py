@@ -13,7 +13,6 @@ Supports:
 """
 
 import argparse
-from ast import arg
 import sys
 
 from airgapper.modules import download_docker_images, upload_docker_images_harbor
@@ -76,7 +75,7 @@ parser.add_argument(
     '-r',
     "--registry",
     dest="registry",
-    required=Action.UPLOAD in sys.argv,
+#    required=Action.UPLOAD in sys.argv,
     help="[UPLOAD] Registry hostname.",
 )
 
