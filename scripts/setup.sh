@@ -7,7 +7,9 @@
 # "strict" mode - exit immediately on any error, catch unset variables and catch any error in pipeline
 set -euo pipefail
 
-GITHUB_API_URL="https://api.github.com/repos/puggrammer/airgapper/contents/scripts"
+# GITHUB_API_CONTENTS_URL="https://api.github.com/repos/puggrammer/airgapper/contents/scripts"
+
+GITHUB_API_CONTENTS_URL="https://api.github.com/repos/cirr0cumulus/airgapper/contents/scripts?ref=add-scripts"
 NUM_STEPS="3"
 
 OVERALL_SUCCESS=true   # Track overall status
@@ -46,7 +48,7 @@ create_project_dir() {
 
 # Get content from URL
 fetch_url() {
-  curl -s -H "Accept: application/vnd.github.v3+json" "$GITHUB_API_URL" \
+  curl -s -H "Accept: application/vnd.github.v3+json" "$GITHUB_API_CONTENTS_URL" \
   | grep '"download_url"' \
   | sed -E 's/.*"download_url": "(.*)",/\1/'
 }
@@ -58,7 +60,7 @@ download_files() {
   local success=true
 
   echo -e "\n[1/$NUM_STEPS] Downloading helper scripts to folder: $dir"
-  fetch_url | while read -r url; do
+  while read -r url; do
     # Skip if URL is null or empty
     if [ -n "$url" ] && [ "$url" != "null" ]; then
       echo "        Downloading $url "
@@ -68,7 +70,7 @@ download_files() {
         OVERALL_SUCCESS=false
       fi
     fi
-  done
+  done < <(fetch_url)
 
   if [ "$success" = true ]; then
     echo "   ✔  All files downloaded to folder: $dir"
@@ -103,7 +105,7 @@ get_latest_release_version() {
   echo "        Fetching latest release information..."
 
   # Fetch release info
-  if ! release_resp=$(curl -sS -f "https://api.github.com/repos/puggrammer/airgapper/releases/latest"); then
+  if ! release_resp=$(curl -sS -f "https://api.github.com/repos/cirr0cumulus/airgapper/releases/latest"); then
     echo "   ✖  Error: Failed to fetch latest release info from GitHub. Check internet connection and retry again..." >&2
     OVERALL_SUCCESS=false
     exit 1
@@ -190,6 +192,6 @@ trap print_summary EXIT
 verify_docker_installed
 init
 download_files "$PROJECT_DIR"
-pull_docker_image
+#pull_docker_image
 #build_docker_image "$PROJECT_DIR"
-save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
+#save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
