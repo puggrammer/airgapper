@@ -81,5 +81,5 @@ class Args:
             registry = os.getenv("AIRGAPPER_HARBOR_URL")
 
         if not registry:
-            raise ValueError("Registry URL is required for Upload. Please provide a registry URL in args or set in .env file.")
+            raise ValueError("Registry URL is required for Upload. Please provide a registry URL in args or set in airgapper.env file.")
         return registry

@@ -17,7 +17,7 @@ set -euo pipefail
 # Get the absolute path of the directory where the script is located,
 # regardless of where it is called from or if it is symlinked.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-readonly ENV_FILE="${SCRIPT_DIR}/.env"
+readonly ENV_FILE="${SCRIPT_DIR}/airgapper.env"
 
 # Initialise variable
 IMAGE_NAME=""
@@ -39,7 +39,7 @@ Usage: $(basename "$0") [-i|--image <image_name>] [AIRGAPPER_ARGS...]
 Run the airgapper Docker container with bind mounts and environment variables.
 
 Options:
-  -i, --image <image_name>  Override the Docker image name (default: from .env)
+  -i, --image <image_name>  Override the Docker image name (default: from airgapper.env)
   -h, --help                Show this help message and exit
 
 Arguments passed after the options are forwarded to the 'airgapper' command inside the container.
@@ -52,7 +52,7 @@ EOF
 }
 
 
-# Extract IMAGE_NAME name from .env file
+# Extract IMAGE_NAME name from airgapper.env file
 get_image_name_from_env_file() {
   echo -e "\n➤  Extracting image name..."
   # Use awk to reliably extract the value, which won't fail if the line isn't found
@@ -70,27 +70,27 @@ get_image_name_from_env_file() {
 
 # Check for required dependencies like whether docker is installed
 check_dependencies() {
-  echo "➤  Checking dependencies..."
+  echo -e "\n➤  Checking dependencies..."
 
   if ! command -v docker &> /dev/null; then
     echo "✖ Error: docker is not installed or not in PATH. Please install docker and try again." >&2
     exit 1
   fi
 
-  # Ensure .env exists
+  # Ensure airgapper.env exists
   if [[ ! -f "$ENV_FILE" ]]; then
-    echo "✖ Error: .env file not found in $SCRIPT_DIR" >&2
+    echo "✖ Error: airgapper.env file not found in $SCRIPT_DIR" >&2
     exit 1
   fi
 
-  echo -e "✔  All dependencies met!\n"
+  echo -e "✔  All dependencies met!"
 }
 
 
 verify_image_name_exist() {
   if [[ -z "$IMAGE_NAME" ]]; then
-    echo -e "\n✖ ERROR: Docker image name not found in .env file and arguments" >&2
-    echo "> Set docker image name in .env file or in argument -i"
+    echo -e "\n✖ ERROR: Docker image name not found in airgapper.env file and arguments" >&2
+    echo "> Set docker image name in airgapper.env file or in argument -i"
     print_separator "=" 100
     show_help 1
   fi
@@ -197,7 +197,7 @@ main() {
   process_help_arg "$@"
 
   # 2. RUN REQUIRED CHECKS AND EXTRACT CONFIGURATION
-  print_separator
+  # print_separator
   check_dependencies
   get_image_name_from_env_file
 

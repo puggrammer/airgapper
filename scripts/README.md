@@ -12,7 +12,7 @@ This folder contains helper tools to run airgapper in both online and offline en
 ## ⚙️️ Prerequisites
 - 🐳 Docker engine on both internet and offline machine
 - 💻 Git Bash on both internet and offline machine
-- 📄 `.env` file in the project root (see `.sample.env` for the list of environment variables)
+- 📄 `airgapper.env` file in the project root (see `sample.env` for the list of environment variables)
 - Offline environment has Nexus repository to host the Docker images
 
 
@@ -27,38 +27,23 @@ curl -L https://raw.githubusercontent.com/puggrammer/airgapper/master/scripts/se
 ```
 
 
-Alternatively, you can download the contents of this folder and build the Docker image yourself.
-``` sh
-# Download Dockerfile
-curl -L https://raw.githubusercontent.com/puggrammer/airgapper/master/scripts/Dockerfile -o Dockerfile
-
-# Build image
-docker build -t airgapper .
-```
-The Dockerfile uses the latest release of airgapper on pypi.
-
 ### 📰 Set Up Offline Machine
-For developers:
-transfer the scripts folder to the offline machine. 
+After running `setup.sh` on the internet machine, you should have `airgapper.sh`, `sample.env` and optionally, the tar file for airgapper docker image. Transfer these files to the offline machine.
 
-For developers, run `setup-offline.sh`. This assumes that your offline development environment has a Nexus repository
+If the airgapper docker image is hosted on your nexus/harbor, pull the image from the repo. Else, load the image from the tar file.
 
-For system administrator, After setting up the internet machine to download the scripts and build the docker image, t
-
-- Download the files in this folder OR
-- Pull docker image from self-hosted harbour registry
-
-
+Your have now completed setting up your offline machine.
 
 
 ## 🚀 Usage
-1. Configure the settings in `.env` file. Copy the `.sample.env` and edit it accordingly.
+1. Configure the settings in `airgapper.env` file. Copy the `sample.env` and edit it accordingly.
     ``` sh
-    cp .sample.env .env
+    cp sample.env airgapper.env
     ```
 
-2. Run `airgapper.sh` in the project directory like how you were using airgapper! <br>
-You may provide/overwrite the image name using `-i` or `--image` flag but `.env` must still be present in the project directory.
+2. Run `airgapper.sh` in the project directory like how you were using airgapper!  
+You may provide/overwrite the image name using `-i` or `--image` flag but `airgapper.env` must still be present in the project directory.
+
 
 Examples:
 ```bash
@@ -67,16 +52,28 @@ Examples:
 ./airgapper.sh -i airgapper:latest pypi download requests -o output
 
 ./airgapper.sh --image airgapper:latest docker download input/dl_docker.txt -o output
+
+./airgapper.sh pypi upload output/requests-2.32.5-py3-none-any.whl -a nexus --repo pypi-hosted
 ```
 
-
+> [!NOTE]
+>
+> Only the parent folder of the `airgapper.sh` script is mounted to the docker container. Ensure that the directories and files for airgapper to use are within this folder.
+>
+>    Example folder structure:
+>   ```text
+>   airgapper
+>   └── scripts
+>       ├── airgapper.sh
+>       ├── airgapper.env
+>       └── input
+>       │   └── requirements.txt
+>       └── output
+>           └── requests-2.32.5-py3-none-any.whl 
+>   ```
+> 
 
 
 ## 🔒 Security Notes
 - The wrapper script uses docker-in-docker to expose the Docker installed on host for docker commands.
 - Docker container is using root user to get the folder permissions right.
-- Do not commit .env — it contains usernames and passwords. Add it to .gitignore.
-
-Secrets are injected into containers via --env-file .env, not hardcoded in scripts.
-
-## 📦 Getting Started

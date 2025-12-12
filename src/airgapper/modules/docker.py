@@ -1,13 +1,12 @@
-from email.mime import image
 import json
-import os
 import re
 from pathlib import Path
 
-from airgapper.enum import InputType
 from airgapper.dataclasses import Args
-from airgapper.utils import check_docker, run_command, run_command_with_stdout, pretty_print_summary
+from airgapper.enum import InputType
 from airgapper.repositories import HarborHelper, NexusHelper
+from airgapper.utils import check_docker, run_command, run_command_with_stdout, pretty_print_summary
+
 
 def download_docker_images(args: Args):
     input_list = []
@@ -83,6 +82,8 @@ def upload_docker_images_harbor(args: Args):
         print("Logging out docker..")
         harbor.logout()
 
+    pretty_print_summary("Upload docker images to harbor completed!")
+
 def upload_docker_images_nexus(args: Args):
     registry = args.registry
 
@@ -118,6 +119,8 @@ def upload_docker_images_nexus(args: Args):
     finally:
         print("Logging out docker..")
         nexus.logout_docker()
+
+    pretty_print_summary("Upload docker images to nexus completed!")
 
 
 def upload_docker_images_generic_registry():

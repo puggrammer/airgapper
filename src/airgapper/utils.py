@@ -1,10 +1,6 @@
-
-import os
 import json
-import sys
 import subprocess
-import getpass
-from time import sleep
+import sys
 
 import requests
 
@@ -50,7 +46,8 @@ def run_command(command, **kwargs):
         for c in iter(lambda: process.stdout.read(1), b""):
             sys.stdout.buffer.write(c)
             sys.stdout.buffer.flush()
-
+    # wait for process to complete in order to get the return code
+    process.wait()
 
     # stdout = []
     # while process.stdout:

@@ -1,11 +1,11 @@
 import os
 import subprocess
-
 from pathlib import Path
+
 from airgapper.dataclasses import Args
 from airgapper.enum import InputType
-from airgapper.utils import run_command, pretty_print_summary
 from airgapper.repositories import NexusHelper
+from airgapper.utils import run_command, pretty_print_summary
 
 
 class MavenHelper:
@@ -57,7 +57,7 @@ class MavenHelper:
             else:
                 print(f"Uploading pom for {packageName}")
                 nexus.api_upload_maven_component(pom_fp=pomFile)
-        print("Uploaded!")
+        pretty_print_summary("Upload maven packages to nexus completed!")
         
 
     def __check_mvn_installed(self):

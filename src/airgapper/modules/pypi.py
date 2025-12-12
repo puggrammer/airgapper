@@ -1,10 +1,9 @@
-import sys
 from pathlib import Path
 
-from airgapper.enum import InputType
 from airgapper.dataclasses import Args
+from airgapper.enum import InputType
 from airgapper.repositories import NexusHelper
-from airgapper.utils import pretty_print_response, run_command, pretty_print_completedprocess, run_command_with_stdout, pretty_print_summary
+from airgapper.utils import pretty_print_response, run_command, pretty_print_summary
 
 
 class PypiHelper:
@@ -50,4 +49,4 @@ class PypiHelper:
             print(f"Uploading python package {file.name}..")
             resp = nexus.api_upload_pypi_component(file)
             pretty_print_response(resp)
-        print("Uploading completed.")
+        pretty_print_summary("Upload pypi packages to nexus completed!")
