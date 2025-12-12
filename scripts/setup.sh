@@ -7,9 +7,7 @@
 # "strict" mode - exit immediately on any error, catch unset variables and catch any error in pipeline
 set -euo pipefail
 
-# GITHUB_API_CONTENTS_URL="https://api.github.com/repos/puggrammer/airgapper/contents/scripts"
-
-GITHUB_API_CONTENTS_URL="https://api.github.com/repos/cirr0cumulus/airgapper/contents/scripts?ref=add-scripts"
+GITHUB_API_CONTENTS_URL="https://api.github.com/repos/puggrammer/airgapper/contents/scripts"
 NUM_STEPS="3"
 
 OVERALL_SUCCESS=true   # Track overall status
@@ -22,6 +20,7 @@ SAVE_TAR=""
 
 IMAGE_NAME="airgapper"
 TAG_NAME=""
+FULLY_QUALIFIED_IMAGE_NAME=""
 
 
 # -------------------------------
@@ -105,7 +104,7 @@ get_latest_release_version() {
   echo "        Fetching latest release information..."
 
   # Fetch release info
-  if ! release_resp=$(curl -sS -f "https://api.github.com/repos/cirr0cumulus/airgapper/releases/latest"); then
+  if ! release_resp=$(curl -sS -f "https://api.github.com/repos/puggrammer/airgapper/releases/latest"); then
     echo "   ✖  Error: Failed to fetch latest release info from GitHub. Check internet connection and retry again..." >&2
     OVERALL_SUCCESS=false
     exit 1
@@ -121,7 +120,23 @@ get_latest_release_version() {
   fi
 
   echo "        Latest tag name is: $TAG_NAME"
+}
+
+
+# Retag docker image to just airgapper:tag
+retag_docker_image() {
   FULL_IMAGE_NAME="$IMAGE_NAME:$TAG_NAME"
+  echo "        Retagging image from $FULLY_QUALIFIED_IMAGE_NAME to $FULL_IMAGE_NAME"
+  docker tag "$FULLY_QUALIFIED_IMAGE_NAME" "$FULL_IMAGE_NAME"
+  echo "        ✔  Retagged docker image to $FULL_IMAGE_NAME successfully."
+}
+
+
+# Remove the docker image with the fully qualified image name
+remove_fully_qualified_name_docker_image() {
+  echo "        Removing $FULLY_QUALIFIED_IMAGE_NAME image"
+  docker rmi "$FULLY_QUALIFIED_IMAGE_NAME"
+  echo "        ✔  Removed docker image $FULLY_QUALIFIED_IMAGE_NAME successfully."
 }
 
 
@@ -130,10 +145,14 @@ pull_docker_image() {
   echo -e "\n[2/$NUM_STEPS] Pulling Docker image..."
   get_latest_release_version
 
-  local image_url="ghcr.io/puggrammer/airgapper:$TAG_NAME"
-  echo "        Pulling image from $image_url"
-  docker pull "$image_url"
-  echo "   ✔  Docker image airgapper:$TAG_NAME pulled successfully."
+  FULLY_QUALIFIED_IMAGE_NAME="ghcr.io/puggrammer/$IMAGE_NAME:$TAG_NAME"
+  echo "        Pulling image from $FULLY_QUALIFIED_IMAGE_NAME"
+  docker pull "$FULLY_QUALIFIED_IMAGE_NAME"
+  echo "        ✔  Docker image $FULLY_QUALIFIED_IMAGE_NAME pulled successfully."
+
+  retag_docker_image
+  remove_fully_qualified_name_docker_image
+  echo "   ✔  Pulled docker image $FULL_IMAGE_NAME successfully."
 }
 
 
@@ -175,7 +194,7 @@ print_summary() {
   print_separator "="
   if [ $status -eq 0 ] && [ "$OVERALL_SUCCESS" = true ]; then
     echo -e "\n✅ COMPLETED setting up airgapper! 🎉🎉🎉"
-    echo -e "\n➤➤➤ NEXT STEP: configure .env file before running airgapper.sh"
+    echo -e "\n➤➤➤ NEXT STEP: configure airgapper.env file before running airgapper.sh"
   else
     echo -e "\n▲ ERROR encountered! Please check the logs above "
     exit 1
@@ -192,6 +211,6 @@ trap print_summary EXIT
 verify_docker_installed
 init
 download_files "$PROJECT_DIR"
-#pull_docker_image
+pull_docker_image
 #build_docker_image "$PROJECT_DIR"
-#save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
+save_tar "$FULL_IMAGE_NAME" "$IMAGE_NAME" "$PROJECT_DIR"
